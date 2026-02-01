@@ -1,0 +1,29 @@
+{
+  "name": "fintrack",
+  "version": "1.0.0",
+  "description": "A web application for tracking monetary movements — incomes, outcomes, bills, etc. The application is built using Vue, Vuetify, Express, Mongoose, and Materia Design.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "front": "cd frontend && npm run dev",
+    "back": "cd backend && node server.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Solomon-David/FinTrack.git"
+  },
+  "keywords": [],
+  "author": "SolomonDavid Akesobia",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Solomon-David/FinTrack/issues"
+  },
+  "homepage": "https://github.com/Solomon-David/FinTrack#readme",
+  "dependencies": {
+   
+  },
+  "devDependencies": {
+    "vite": "^7.1.5"
+  }
+}
