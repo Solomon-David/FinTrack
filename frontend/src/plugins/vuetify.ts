@@ -13,10 +13,10 @@ const mainTheme: ThemeDefinition = {
         primary: "#EAB000",
         "primary-light": "#EDC458",
         accent: "#141671",    
-        secondary: "#213BA3",
+        secondary: "#0e2270",
         "secondary-translucent": "#3E5CD4AA",
         "secondary-light": "#47A2F5",
-        light: "#FAFAF0"
+        light: "#FAFAF0",
     }
 }
 
@@ -28,6 +28,9 @@ const vuetify = createVuetify({
         themes: {
             mainTheme
         }
+    },
+    display: {
+        mobileBreakpoint: "sm"
     }
 });
 

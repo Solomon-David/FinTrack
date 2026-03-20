@@ -1,9 +1,26 @@
 import { createRouter, createWebHistory } from "vue-router";
 
-import Home from "../components/HelloWorld.vue";
+//Layouts
+import GuestLayout from '@layouts/GuestLayout.vue';
+
+//views
+// import Home from "@comps/HelloWorld.vue";
+import SignUpView from "@views/auth/SignUpView.vue";
 
 const routes = [
-    {path: "/", component: Home}
+    {path: "/", 
+    component: GuestLayout,
+    children:[
+        {
+            path: "",
+            redirect: "sign"
+        },
+        {
+            path: "sign",
+            component: SignUpView,
+        }
+        ]
+    }
 ]
 
 const router = createRouter ({
@@ -11,4 +28,4 @@ const router = createRouter ({
     routes
 });
 
-export default router;
+export default router; 
