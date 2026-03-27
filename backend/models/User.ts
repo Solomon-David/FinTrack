@@ -1,8 +1,8 @@
 import mongoose, { Document, Model, Schema } from 'mongoose';
-import { IUser } from './interfaces';
+import { IUserModel } from '../interfaces';
 import { hashPassword, comparePassword } from '../config/bcryptjs';
 
-const UserSchema: Schema<IUser> = new Schema(
+const UserSchema: Schema<IUserModel> = new Schema(
   {
     email: {
       type: String,
@@ -24,7 +24,7 @@ const UserSchema: Schema<IUser> = new Schema(
     nickname: {
       type: String,
       trim: true,
-      default: function (this: IUser) {
+      default: function (this: IUserModel) {
         if (this.firstName && this.lastName) {
           return `${this.firstName} ${this.lastName}`;
         }
@@ -37,11 +37,6 @@ const UserSchema: Schema<IUser> = new Schema(
     },
     dob: {
       type: Date,
-    },
-    lastSeen: {
-      type: Date,
-      required: true,
-      default: () => new Date(),
     },
     preferredCurrency: {
       type: String,
@@ -77,6 +72,8 @@ const UserSchema: Schema<IUser> = new Schema(
       type: String,
       trim: true,
     },
+    verificationCodeExpires: Number,
+    lastSeen: Date,
   },
   {
     timestamps: true,
@@ -85,7 +82,7 @@ const UserSchema: Schema<IUser> = new Schema(
 );
 
 // Pre-save hook to hash password if modified
-UserSchema.pre<IUser>('save', async function(next) {
+UserSchema.pre<IUserModel>('save', async function(next) {
   if (this.isModified('password')) {
     this.password = await hashPassword(this.password);
   }
@@ -108,7 +105,7 @@ UserSchema.methods.changePassword = async function(oldPassword: string, newPassw
 };
 
 
-const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
+const User: Model<IUserModel> = mongoose.models.User || mongoose.model<IUserModel>('User', UserSchema);
 
 export default User;
 

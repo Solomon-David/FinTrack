@@ -1,5 +1,5 @@
 import mongoose, { Model, Schema } from "mongoose";
-import { IRCData } from "./interfaces";
+import { IRCData } from "../interfaces";
 
 const ContactSubSchema = new Schema(
   {

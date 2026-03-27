@@ -1,6 +1,6 @@
 import mongoose, { Model, Schema } from "mongoose";
 import User from "./User";
-import { IPlan } from "./interfaces";
+import { IPlan } from "../interfaces";
 
 const PlanSchema: Schema<IPlan> = new Schema(
   {

@@ -1,4 +1,5 @@
 import mongoose, { Document } from "mongoose";
+import { Request } from "express";
 
  interface GenericDocument extends Document {
     createdAt: Date;
@@ -10,7 +11,8 @@ export interface IContact extends Document {
     phone?: string;
 }
 
-export interface IUser extends GenericDocument {
+export interface IUserModel extends GenericDocument {
+    _id: string;
     firstName: string;
     lastName: string;
     nickname?: string;
@@ -23,7 +25,9 @@ export interface IUser extends GenericDocument {
     password: string;
     contacts: Array<IContact>;
     verified: boolean;
-    verificationCode?: string; //6 character code for email verification
+    verificationCode?: string | null; //6 character code for email verification
+    verificationCodeExpires: number|null,
+    refreshToken: string | undefined;
     comparePassword(password: string): Promise<boolean>;
     changePassword(oldPassword: string, newPassword: string): Promise<void>;
 }
@@ -107,3 +111,32 @@ export interface IDataRange {
     end: Date;
 }
     
+//interface for email
+export interface SendEmailDTO {
+    to: string;
+    subject: string;
+    text: string;
+    html?: string;
+}
+
+export interface IUser {
+    firstName: string;
+    lastName: string;
+    nickname?: string;
+    email: string;
+    photoData?: string; 
+    dob?: Date;
+    lastSeen: Date;
+    preferredCurrency: string;
+    preferredTheme: string;
+    contacts: Array<IContact>;
+    verified: boolean;
+}
+
+export interface TokenPayload {
+    userId: string;
+}
+
+export interface UserRequest extends Request {
+    user?: { userId: string; lastActive?: number };
+}

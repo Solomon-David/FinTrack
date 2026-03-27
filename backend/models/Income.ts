@@ -1,6 +1,6 @@
 import mongoose, { Model, Schema } from "mongoose";
 import User from "./User";
-import { IIncome } from "./interfaces";
+import { IIncome } from "../interfaces";
 
 const IncomeSchema: Schema<IIncome> = new Schema({
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true },

@@ -1,6 +1,6 @@
 import mongoose, { Model, Schema } from "mongoose";
 import User from "./User";
-import { IExpense } from "./interfaces";
+import { IExpense } from "../interfaces";
 
 const ExpenseSchema: Schema<IExpense> = new Schema(
   {

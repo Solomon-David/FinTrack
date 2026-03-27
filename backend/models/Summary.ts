@@ -1,6 +1,6 @@
 import mongoose, { Model, Schema } from "mongoose";
 import User from "./User";
-import { ISummary } from "./interfaces";
+import { ISummary } from "../interfaces";
 
 const SummaryDataEntrySchema = new Schema(
   {
