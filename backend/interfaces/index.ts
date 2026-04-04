@@ -19,11 +19,11 @@ export interface IUserModel extends GenericDocument {
     email: string;
     photoData?: string; 
     dob?: Date;
-    lastSeen: Date;
-    preferredCurrency: string;
-    preferredTheme: string;
+    lastSeen?: Date;
+    preferredCurrency?: string;
+    preferredTheme?: string;
     password: string;
-    contacts: Array<IContact>;
+    contacts?: Array<IContact>;
     verified: boolean;
     verificationCode?: string | null; //6 character code for email verification
     verificationCodeExpires: number|null,

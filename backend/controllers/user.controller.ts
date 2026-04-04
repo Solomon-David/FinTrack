@@ -4,6 +4,7 @@ import {upload} from "../config/multer";
 import {sendEmail } from '../config/emailer';
 import {SendEmailDTO, UserRequest} from '../interfaces';
 import { generateAccessToken, generateRefreshToken, verifyAccessToken, verifyRefreshToken}  from "../utils/generateToken";
+import { generateVerificationCode } from "../utils/generateVerificationCode";
 
 
 //for creating new user
@@ -11,14 +12,13 @@ export const createUser = async (req: Request, res: Response) => {
     try {
         //getting user info form body
         const { firstName, lastName, email, password} = req.body;
-        console.log(firstName, lastName, email, password)
         //checking for existing user by email
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ error: "Email already in use"});
         }
         //creating new user
-        const verificationCode: string = Math.floor(100000 + Math.random() * 900000).toString();
+        const verificationCode: string = generateVerificationCode();
 
         const user = new User({ firstName, lastName, email, password, isVerified: false,
             verificationCode,
@@ -86,6 +86,41 @@ export const verifyAccount = async (req: Request, res: Response) => {
         });
     }
     }
+
+    // resend verification code. requres email
+
+export const resendVerificationEmail = async (req: Request, res: Response) => {
+    try {
+        const newVerificationCode: string = generateVerificationCode();
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        if (user.verified) {
+            return res.status(400).json({ message: "Account already verified." });
+        }
+        user.verificationCode = newVerificationCode;
+        user.verificationCodeExpires = Date.now() + (10 * 60 * 1000);
+        await user.save();
+        // Send verification email
+        await sendEmail(<SendEmailDTO>{
+            to: email,
+            subject: "Your new FinTrack verification code",
+            html: `<h2>FinTrack Account Verification</h2>
+                  <p>Your new verification code is <b>${newVerificationCode}</b> and expires in 10 minutes.</p><br><br>
+                  <p>If you didn't make this request, ignore the code.</p>`
+        });
+        res.status(200).json({ message: "Verification email resent successfully" });
+    }catch (error) {
+        console.error('Error sending email:', error);
+        res.status(500).json({
+            error: 'Failed to send email',
+            success: false
+        });
+    }
+}
+
 export const loginUser = async (req: Request, res: Response) => {
     const { email, password } = req.body;
     // if email or password is null

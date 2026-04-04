@@ -15,7 +15,7 @@
       "@/*": ["./src/*"],
       "@layouts/*": ["./src/layouts/*"],
       "@views/*": ["./src/views/*"],
-      "@comps/*": ["./src/components/*"],
+      "@components/*": ["./src/components/*"],
       "@assets/*": ["./src/assets/*"],
     
   },

@@ -23,9 +23,10 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors({ origin: 'http://localhost:5173' })); // Adjust as needed for frontend URL
 app.use(express.json());
+app.use(express.urlencoded({extended: true}));
 
-app.use("/api/auth/", authRoutes);
-app.use("/api/user/", userRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/user", userRoutes);
 
 
 // Health check endpoint

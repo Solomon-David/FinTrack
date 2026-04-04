@@ -13,6 +13,7 @@ const options: mongoose.ConnectOptions = {
 };
 
 let isConnected = false;
+mongoose.set("debug", process.env.NODE_ENV === 'development');
 
 export async function connectDB(): Promise<void> {
   if (isConnected) {

@@ -40,11 +40,9 @@ const UserSchema: Schema<IUserModel> = new Schema(
     },
     preferredCurrency: {
       type: String,
-      required: true,
     },
     preferredTheme: {
       type: String,
-      required: true,
     },
     password: {
       type: String,
