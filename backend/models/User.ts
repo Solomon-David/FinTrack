@@ -89,6 +89,8 @@ UserSchema.pre<IUserModel>('save', async function(next) {
 
 // Instance method to compare password
 UserSchema.methods.comparePassword = async function(password: string): Promise<boolean> {
+  
+  console.log('Comparing password:', password, 'with hashed:', this.password);
   return comparePassword(password, this.password);
 };
 

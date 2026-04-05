@@ -4,6 +4,7 @@
     <!-- Email -->
 
     <v-text-field
+      v-model="email"
       label="Email"
       type="email"
       color="light"
@@ -14,6 +15,7 @@
 
     <!-- password -->
     <v-text-field
+      v-model="password"
       label="Password"
       :type="isPassword ? 'password' : 'text'"
       color="light"
@@ -24,15 +26,20 @@
       @click:append-inner="() => (isPassword = !isPassword)"
     >
     </v-text-field>
+
     <!-- yellow button for login -->
     <v-btn
       class="text-bold text-none bg-primary text-light py-5 mt-5"
       variant="flat"
       rounded
       block
+      type="submit"
     >
       Login
     </v-btn>
+    <v-alert v-if="showAlert" :type="status ? 'success' : 'error'" class="mt-4">
+      {{ message }}
+    </v-alert>
     <!-- link to sign up -->
     <p class="text-center text-caption text-light mt-5">
       Don't have an account?
@@ -58,13 +65,31 @@ const userStore = useUserStore();
 const isPassword = ref(true);
 const email = ref("");
 const password = ref("");
+const message = ref<string | null>(null);
+const status = ref(false);
+const showAlert = ref(false);
 
 const handleLogin = async () => {
   try {
     await userStore.login(email.value, password.value);
-    // Handle success, maybe redirect
+    if (userStore.error) {
+      throw new Error(userStore.error);
+    }
+
+    status.value = userStore.status;
+    console.log(message.value);
+    message.value = userStore.message;
+    status.value = true;
+    router.push("/dashboard");
   } catch (error) {
-    // Error is handled in store
+    message.value = userStore.error || "Login failed";
+    console.log(message.value);
+    status.value = false;
   }
+
+  showAlert.value = true;
+  setTimeout(() => {
+    showAlert.value = false;
+  }, 10000);
 };
 </script>

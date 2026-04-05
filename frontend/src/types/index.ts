@@ -10,8 +10,11 @@ export interface User {
     lastName: string;
     nickname?: string;
     photoData?: Base64URLString;
-    token: string;
-    refreshToken: string;
+    tokens: {
+        accessToken: string;
+        refreshToken: string;
+    }
+    isVerified: boolean;
     dob?: Date;
 }
 

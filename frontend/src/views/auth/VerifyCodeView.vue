@@ -61,11 +61,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useUserStore } from "@/stores/users.stores";
 import { useRoute, useRouter } from "vue-router";
 const userStore = useUserStore();
-const isLoading = ref(userStore.isLoading);
+const isLoading = computed(() => userStore.isLoading);
 const route = useRoute();
 const router = useRouter();
 const email = (route.query.email as string) || "";
@@ -95,29 +95,19 @@ function pasteCodeFromClipboard() {
 }
 
 async function handleVerify() {
-  isLoading.value = true;
-  error.value = "";
   try {
-    // Simulate API call to verify code
     await userStore.verifyAccount(email, code.value);
     router.push("/dashboard");
   } catch (err) {
-    error.value = "Failed to verify code. Please try again.";
-  } finally {
-    isLoading.value = false;
+    error.value = userStore.error || "Failed to verify code. Please try again.";
   }
 }
 
 async function handleResend() {
-  isLoading.value = true;
-  error.value = "";
   try {
-    // sending API request to resend verification code
     await userStore.resendVerificationCode(email);
   } catch (err) {
-    error.value = "Failed to resend code. Please try again.";
-  } finally {
-    isLoading.value = false;
+    error.value = userStore.error || "Failed to resend code. Please try again.";
   }
 }
 </script>

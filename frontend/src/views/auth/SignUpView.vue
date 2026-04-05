@@ -90,13 +90,15 @@ const password = ref("");
 const router = useRouter();
 
 const handleSignUp = async () => {
+  try {
     await userStore.signUp(email.value, password.value, firstName.value, lastName.value);
-    // Handle success, maybe redirect
     router.push({
       path: "/verify",
       query: { email: email.value },
     });
-    
+  } catch (error) {
+    // Error is handled by the store and displayed via userStore.error
+  }
 };
 
 defineEmits({

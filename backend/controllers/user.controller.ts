@@ -2,7 +2,7 @@ import  User  from '../models/User';
 import { Request, Response } from 'express';
 import {upload} from "../config/multer";
 import {sendEmail } from '../config/emailer';
-import {SendEmailDTO, UserRequest} from '../interfaces';
+import {SendEmailDTO, UserRequest, IUserModel} from '../interfaces';
 import { generateAccessToken, generateRefreshToken, verifyAccessToken, verifyRefreshToken}  from "../utils/generateToken";
 import { generateVerificationCode } from "../utils/generateVerificationCode";
 
@@ -124,23 +124,35 @@ export const resendVerificationEmail = async (req: Request, res: Response) => {
 export const loginUser = async (req: Request, res: Response) => {
     const { email, password } = req.body;
     // if email or password is null
-    if (!email || !password ) return res.status(400).json({message: "Incomplete credentials"});
+    if (!email || !password ) return res.status(400).json({message: "Incomplete credentials", success: false});
 
     try{
         // get user by email
-        const user: any = await User.findOne({email});
-        if(user){
-            return res.status(404).json({message: "User does not exist"});
+        const user: IUserModel | null = <IUserModel> await User.findOne({email}).select('+password');
+        if(!user){
+            return res.status(404).json({message: "User does not exist", success: false});
         }
         //compare passwords
-        const passwordMatch: boolean|undefined = await user.comparePassword(password);
+        const passwordMatch: boolean|undefined = await user?.comparePassword(password);
 
         if(passwordMatch){
             const accessToken = generateAccessToken({ userId: user._id });
             const refreshToken = generateRefreshToken({ userId: user._id });
             user.refreshToken = refreshToken;
             await user.save();
-            return res.status(200).json({message: `Welcome, ${user.nickname}`, success: true, tokens: {access: accessToken, refresh:refreshToken}});
+            return res.status(200).json({message: `Welcome, ${user.nickname}`, success: true, user: {
+                id: user._id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                nickname: user.nickname,
+                photoData: user.photoData,
+                    tokens: {
+                        accessToken,
+                        refreshToken
+                    },
+                dob: user.dob
+            }});
         }
         else{
             return res.status(404).json({message: "Wrong password", success: false})
