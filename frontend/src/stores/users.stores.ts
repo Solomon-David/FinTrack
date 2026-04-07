@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import type { User } from '../types';
-import axiosInstance from '@/utils/axios';
+import * as userApi from '@/api/users.api';
 
 export const useUserStore = defineStore('user', {
   state: () => ({
@@ -61,12 +61,7 @@ export const useUserStore = defineStore('user', {
       this.message = '';
 
       try {
-        const response = await axiosInstance.post('/auth/signup', {
-          email,
-          password,
-          firstName,
-          lastName,
-        });
+        const response = await userApi.signUp({ email, password, firstName, lastName });
 
         const newUser: User = response.data;
         this.user = newUser;
@@ -90,10 +85,7 @@ export const useUserStore = defineStore('user', {
       this.message = '';
       this.status = false;
       try {
-        const response = await axiosInstance.post('/auth/login', {
-          email,
-          password,
-        });
+        const response = await userApi.login(email, password);
 
         const loggedInUser: User = response.data.user;
         this.user = loggedInUser;
@@ -122,16 +114,14 @@ export const useUserStore = defineStore('user', {
 
     //refresh token
     async refreshToken() {
-      if (!this.user) return { success: false, message: 'No user logged in' };
+      if (!this.user?.tokens?.refreshToken) return { success: false, message: 'No refresh token available' };
 
       try {
-        const response = await axiosInstance.post('/auth/refresh-token', {
-          userId: this.user.id,
-        });
+        const response = await userApi.refreshToken(this.user.tokens.refreshToken);
 
         // Update stored token if new token provided
-        if (response.data.tokens?.accessToken) {
-          this.user.tokens = { ...this.user.tokens, ...response.data.tokens };
+        if (response.data.accessToken) {
+          this.user.tokens.accessToken = response.data.accessToken;
           this.saveUserToStorage(this.user);
         }
 
@@ -152,7 +142,7 @@ export const useUserStore = defineStore('user', {
       this.message = '';
 
       try {
-        const response = await axiosInstance.post('/auth/resend-code', { email });
+        const response = await userApi.resendVerificationCode(email);
         this.message = response.data.message || 'Verification code resent to your email!';
       } catch (error: any) {
         const message = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to resend verification code';
@@ -171,7 +161,7 @@ export const useUserStore = defineStore('user', {
       this.message = '';
 
       try {
-        const response = await axiosInstance.post('/auth/verify-account', { email, code });
+        const response = await userApi.verifyAccount(email, code);
         this.message = response.data.message || 'Account verified successfully!';
       } catch (error: any) {
         const message = error.response?.data?.message || error.response?.data?.error || error.message || 'Account verification failed';
@@ -180,7 +170,58 @@ export const useUserStore = defineStore('user', {
       } finally {
         this.isLoading = false;
       }
-    }
+    },
     // end of verify account
+
+    // forgot password
+      async forgotPassword(email: string) {
+        this.isLoading = true;
+        this.error = null;
+        this.message = '';
+        try {
+          const response = await userApi.forgotPassword(email);
+          this.message = response.data.message || 'Password reset link sent to your email!';
+          return { status: response.data.success, message: this.message };
+        } catch (error: any) {
+          const message = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to send reset link';
+          this.error = message;
+          return { status: false, message };  
+        } finally {
+          this.isLoading = false;
+        }
+      },
+    // end of forgot password
+  
+    // reset password
+    async resetPassword(email: string, code: string, newPassword: string) {
+      this.isLoading = true;
+      this.error = null;
+      this.message = '';
+      try {
+        const response = await userApi.resetPassword(email, code, newPassword);
+        this.message = response.data.message || 'Password reset successfully!';
+        return { status: response.data.success, message: this.message };
+      } catch (error: any) {
+        const message = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to reset password';
+        this.error = message;
+        return { status: false, message };  
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    //end of reset password
+
+    // getting user photo
+    async getUserPhoto(userId: string): Promise<string> {
+      try {
+        const response = await userApi.getUserPhoto(userId);
+        return response.data.photoUrl || '';
+      } catch (error) {
+        console.error('Error fetching user photo:', error);
+        throw new Error('Failed to fetch user photo');
+      }
+    }
+    
+    
   },
 });

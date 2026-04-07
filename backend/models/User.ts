@@ -72,6 +72,12 @@ const UserSchema: Schema<IUserModel> = new Schema(
     },
     verificationCodeExpires: Number,
     lastSeen: Date,
+    passwordResetCode: {
+      type: String,
+      trim: true,
+    },
+    passwordResetCodeExpires: Number,
+    
   },
   {
     timestamps: true,
@@ -89,8 +95,6 @@ UserSchema.pre<IUserModel>('save', async function(next) {
 
 // Instance method to compare password
 UserSchema.methods.comparePassword = async function(password: string): Promise<boolean> {
-  
-  console.log('Comparing password:', password, 'with hashed:', this.password);
   return comparePassword(password, this.password);
 };
 

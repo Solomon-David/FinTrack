@@ -4,12 +4,12 @@
 // refresh token, dob, 
 
 export interface User {
-    id: number;
+    id: string;
     email: string;
     firstName: string;
     lastName: string;
     nickname?: string;
-    photoData?: Base64URLString;
+    photoData?: string;
     tokens: {
         accessToken: string;
         refreshToken: string;

@@ -27,6 +27,16 @@
     >
     </v-text-field>
 
+    <!-- forgot password link. aligned to the right of the container-->
+    <p class="text-right text-caption text-light">
+      <a href="" class="text-light text-bold" @click.prevent="openDialog = true">
+        Forgot Password?</a
+      >
+    </p>
+
+    <!-- forgot password dialog -->
+    <forgot-password-dialog v-model="openDialog" />
+
     <!-- yellow button for login -->
     <v-btn
       class="text-bold text-none bg-primary text-light py-5 mt-5"
@@ -58,16 +68,19 @@ defineEmits({
 import { ref } from "vue";
 import { useUserStore } from "../../stores/users.stores";
 import { useRouter } from "vue-router";
+import ForgotPasswordDialog from "@/dialogs/ForgotPasswordDialog.vue";
 
 const router = useRouter();
-
 const userStore = useUserStore();
+
 const isPassword = ref(true);
 const email = ref("");
 const password = ref("");
 const message = ref<string | null>(null);
 const status = ref(false);
+
 const showAlert = ref(false);
+const openDialog = ref(false);
 
 const handleLogin = async () => {
   try {
@@ -77,13 +90,11 @@ const handleLogin = async () => {
     }
 
     status.value = userStore.status;
-    console.log(message.value);
     message.value = userStore.message;
     status.value = true;
     router.push("/dashboard");
   } catch (error) {
     message.value = userStore.error || "Login failed";
-    console.log(message.value);
     status.value = false;
   }
 

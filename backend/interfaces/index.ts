@@ -27,7 +27,12 @@ export interface IUserModel extends GenericDocument {
     verified: boolean;
     verificationCode?: string | null; //6 character code for email verification
     verificationCodeExpires: number|null,
-    refreshToken: string | undefined;
+    tokens: {
+        accessToken: string;
+        refreshToken: string;
+    };
+    passwordResetCode?: string | null; //6 character code for password reset
+    passwordResetCodeExpires: number|null,
     comparePassword(password: string): Promise<boolean>;
     changePassword(oldPassword: string, newPassword: string): Promise<void>;
 }

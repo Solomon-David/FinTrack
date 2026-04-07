@@ -1,6 +1,7 @@
 import  User  from '../models/User';
 import { Request, Response } from 'express';
 import {upload} from "../config/multer";
+import cloudinary from "../config/cloudinary";
 import {sendEmail } from '../config/emailer';
 import {SendEmailDTO, UserRequest, IUserModel} from '../interfaces';
 import { generateAccessToken, generateRefreshToken, verifyAccessToken, verifyRefreshToken}  from "../utils/generateToken";
@@ -58,30 +59,43 @@ export const verifyAccount = async (req: Request, res: Response) => {
        //if user is verified
        if(user.verified)
             return res.status(400).json({ message: "Account already verified." });
-        //if code has expired or code is wrong
-        if(user.verificationCode !== code  || <number>user.verificationCodeExpires < Date.now()){
-            return res.status(400).json({ message: "Invalid or expired verification code." })
-        }
 
-        //setting values
-        user.verified = true;
-        user.verificationCode = null;
-        user.verificationCodeExpires = null;
-        
+        // Generate tokens
         const accessToken = generateAccessToken({ userId: user._id });
         const refreshToken = generateRefreshToken({ userId: user._id });
-        user.refreshToken = refreshToken;
-        
-        await user.save();
+
+        // Atomic update with conditions
+        const updatedUser = await User.findOneAndUpdate(
+            {
+                email,
+                verified: false,
+                verificationCode: code,
+                verificationCodeExpires: { $gt: Date.now() }
+            },
+            {
+                $set: {
+                    verified: true,
+                    verificationCode: null,
+                    verificationCodeExpires: null,
+                    'tokens.refreshToken': refreshToken
+                }
+            },
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(400).json({ message: "Invalid or expired verification code." });
+        }
+
         return res.status(200).json({
             message: "Account verified successfully",
             tokens: {access: accessToken, refresh: refreshToken}
         })
 
     } catch (error) {
-        console.error('Error sending email:', error);
+        console.error('Error verifying account:', error);
         res.status(500).json({
-            error: 'Failed to send email',
+            error: 'Failed to verify account',
             success: false
         });
     }
@@ -100,9 +114,20 @@ export const resendVerificationEmail = async (req: Request, res: Response) => {
         if (user.verified) {
             return res.status(400).json({ message: "Account already verified." });
         }
-        user.verificationCode = newVerificationCode;
-        user.verificationCodeExpires = Date.now() + (10 * 60 * 1000);
-        await user.save();
+        // Atomic update
+        const updatedUser = await User.findOneAndUpdate(
+            { email, verified: false },
+            {
+                $set: {
+                    verificationCode: newVerificationCode,
+                    verificationCodeExpires: Date.now() + (10 * 60 * 1000)
+                }
+            },
+            { new: true }
+        );
+        if (!updatedUser) {
+            return res.status(400).json({ message: "Failed to resend verification email" });
+        }
         // Send verification email
         await sendEmail(<SendEmailDTO>{
             to: email,
@@ -113,9 +138,9 @@ export const resendVerificationEmail = async (req: Request, res: Response) => {
         });
         res.status(200).json({ message: "Verification email resent successfully" });
     }catch (error) {
-        console.error('Error sending email:', error);
+        console.error('Error resending verification email:', error);
         res.status(500).json({
-            error: 'Failed to send email',
+            error: 'Failed to resend verification email',
             success: false
         });
     }
@@ -138,8 +163,12 @@ export const loginUser = async (req: Request, res: Response) => {
         if(passwordMatch){
             const accessToken = generateAccessToken({ userId: user._id });
             const refreshToken = generateRefreshToken({ userId: user._id });
-            user.refreshToken = refreshToken;
-            await user.save();
+            // Atomic update
+            const updatedUser = await User.findOneAndUpdate(
+                { _id: user._id },
+                { $set: { 'tokens.refreshToken': refreshToken } },
+                { new: true }
+            );
             return res.status(200).json({message: `Welcome, ${user.nickname}`, success: true, user: {
                 id: user._id,
                 email: user.email,
@@ -228,12 +257,7 @@ export const logout = async (req: UserRequest, res: Response): Promise<void> => 
 
 export const uploadProfilePicture = async (req: Request, res: Response) => {
     try {
-        //getting user by email from body
         const { email } = req.body;
-        const userByEmail = await User.findOne({ email });
-        if (!userByEmail) {
-            return res.status(404).json({ error: 'User not found' });
-        }
 
         // Handle file upload
         await new Promise<void>((resolve, reject) => {
@@ -247,21 +271,21 @@ export const uploadProfilePicture = async (req: Request, res: Response) => {
             return res.status(400).json({ error: 'No file uploaded' });
         }
 
-        // Update user's photoData
-        const user = await User.findByIdAndUpdate(
-            { _id: userByEmail._id },
-            { photoData: req.file.path },
+        // Atomic update
+        const updatedUser = await User.findOneAndUpdate(
+            { email },
+            { $set: { photoData: req.file.path } },
             { new: true }
         );
 
-        if (!user) {
+        if (!updatedUser) {
             return res.status(404).json({ error: 'User not found' });
         }
 
         res.status(200).json({
             success: true,
             message: 'Profile picture updated successfully',
-            user
+            user: updatedUser
         });
     } catch (error) {
         console.error('Error uploading profile picture:', error);
@@ -270,4 +294,86 @@ export const uploadProfilePicture = async (req: Request, res: Response) => {
             success: false
         });
     }
+
 }
+
+    export const forgotPassword = async (req: Request, res: Response) => {
+        try {
+            const { email } = req.body;
+            const resetCode = generateVerificationCode();
+            const updatedUser = await User.findOneAndUpdate(
+                { email },
+                {
+                    $set: {
+                        passwordResetCode: resetCode,
+                        passwordResetCodeExpires: Date.now() + (10 * 60 * 1000)
+                    }
+                },
+                { new: true }
+            );
+            if (!updatedUser) {
+                throw new Error('User not found');
+            }
+            res.status(201).json({message: "Code sent", success: true});
+
+            // Send password reset email
+            await sendEmail(<SendEmailDTO>{
+                to: email,
+                subject: "FinTrack Password Reset",
+                html: `<h2>FinTrack Password Reset</h2>
+                      <p>Your password reset code is <b>${resetCode}</b> and expires in 10 minutes.</p><br><br>
+                      <p>If you didn't make this request, ignore the code.</p>`
+            });
+            
+        } catch (error: any) {
+            console.error('Error resetting password:', error);
+            res.status(500).json({ message: error.message || "Internal server error", success: false });
+        }
+    }
+
+    export const resetPassword = async (req: Request, res: Response) => {
+        try {
+            const { email, code, newPassword } = req.body;
+            const updatedUser = await User.findOneAndUpdate(
+                {
+                    email,
+                    passwordResetCode: code,
+                    passwordResetCodeExpires: { $gt: Date.now() }
+                },
+                {
+                    $set: { password: newPassword },
+                    $unset: { passwordResetCode: 1, passwordResetCodeExpires: 1 }
+                },
+                { new: true }
+            );
+            if (!updatedUser) {
+                return res.status(400).json({ message: "Invalid or expired reset code.", success: false });
+            }
+            res.status(200).json({ message: "Password reset successfully", success: true });
+        } catch (error: any) {
+            console.error('Error resetting password:', error);
+            res.status(500).json({ message: error.message || "Internal server error", success: false });
+        }
+    }
+
+    export const getUserPhoto = async (req: Request, res: Response) => {
+        try {
+            const { userId } = req.params;
+            const user = await User.findById(userId);
+            if (!user) {
+                return res.status(404).json({ message: "User not found", success: false });
+            }
+            if (!user.photoData) {
+                return res.status(404).json({ message: "User photo not found", success: false });
+            }
+
+            const photoUrl = user.photoData.startsWith('http')
+                ? user.photoData
+                : cloudinary.url(user.photoData, { secure: true });
+
+            res.status(200).json({ message: "Photo fetched successfully", success: true, photoUrl });
+        } catch (error: any) {
+            console.error('Error fetching user photo:', error);
+            res.status(500).json({ message: error.message || "Internal server error", success: false });
+        }
+    };

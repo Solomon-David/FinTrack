@@ -5,7 +5,7 @@ const API_BASE_URL = import.meta.env.VITE_APP_API_URL;
 
 const axiosInstance: AxiosInstance = axios.create({
     baseURL: API_BASE_URL,
-    timeout: 10000,
+    timeout: 20000,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -14,7 +14,7 @@ const axiosInstance: AxiosInstance = axios.create({
 // Request interceptor
 axiosInstance.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('authToken');
+        const token = localStorage.getItem('token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -31,7 +31,7 @@ axiosInstance.interceptors.response.use(
     (response: AxiosResponse) => response,
     (error: AxiosError) => {
         if (error.response?.status === 401) {
-            localStorage.removeItem('authToken');
+            localStorage.removeItem('token');
             window.location.href = '/login';
         }
         return Promise.reject(error);

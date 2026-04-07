@@ -9,7 +9,6 @@ import GuestLayout from '@layouts/GuestLayout.vue';
 import AuthView from "@views/auth/AuthView.vue";
 import LoginView from '@views/auth/LoginView.vue';
 import SignUpView from '@views/auth/SignUpView.vue';
-import VerifyCodeView from '@views/auth/VerifyCodeView.vue';
 
 
 const routes = [
@@ -21,7 +20,7 @@ const routes = [
             path: "/",
             redirect: () => {
                 const userStore = useUserStore();
-                return userStore.user?.token ? "/dashboard" : "/signup";
+                return userStore.isAuthenticated ? "/dashboard" : "/signup";
             }
         },
         {
@@ -40,9 +39,10 @@ const routes = [
                 },
                 {
                     path: "verify",
-                    component: VerifyCodeView,
+                    component: () => import("@views/auth/VerifyCodeView.vue"),
                     meta: { title: "verify" }
-                }
+                },
+               
             ]
         }
         ]
