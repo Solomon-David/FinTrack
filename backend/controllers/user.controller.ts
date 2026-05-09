@@ -369,7 +369,7 @@ export const getUserPhoto = async (req: Request, res: Response) => {
             return res.status(404).json({ message: "User not found", success: false });
         }
         if (!user.photoData) {
-            return res.status(404).json({ message: "User photo not found", success: false });
+            return res.status(200).json({ message: "User photo not found", success: false });
         }
 
         const photoUrl = user.photoData.startsWith('http')

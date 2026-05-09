@@ -1,10 +1,13 @@
 <template>
-  <v-app-bar height="100" class="text-secondary d-flex flex-column justify-space-around px-3 pt-2 " elevation="0" align="start">
+  <MenuDrawerComponent v-model="openMenu" />
+  <v-app-bar height="100" class="text-secondary px-3 pt-2" elevation="0" align="start">
     <v-app-bar-nav-icon class="text-h5" @click="openMenu = !openMenu" />
 
     <v-spacer></v-spacer>
 
-    <v-app-bar-title class="font-weight-bold text-h5 text-black">{{ props.title }}</v-app-bar-title>
+    <v-app-bar-title class="font-weight-bold text-h5 text-black">{{
+      props.title
+    }}</v-app-bar-title>
 
     <v-spacer></v-spacer>
 
@@ -13,7 +16,7 @@
       <template v-if="userStore.isAuthenticated">
         <UserPhoto />
       </template>
-      <v-btn v-else icon="mdi-logout" variant="flat" color="secondary" />
+      <v-btn v-else icon="mdi-logout" variant="plain" color="accent" class="text-h6" />
     </div>
   </v-app-bar>
 </template>
@@ -22,6 +25,7 @@
 import { ref } from "vue";
 import { useUserStore } from "@/stores/users.stores";
 import UserPhoto from "@components/user/UserPhoto.vue";
+import MenuDrawerComponent from "@components/shared/MenuDrawerComponent.vue";
 const props = defineProps<{ title?: string | undefined }>();
 
 const openMenu = ref(false);

@@ -1,6 +1,6 @@
 <template>
   <!-- align-end pushes the nickname and the avatar group to the right edge -->
-  <div class="d-flex flex-column align-end justify-center">
+  <div class="d-flex flex-column align-end justify-end">
     <!-- Top Row: Avatar and Arrow -->
     <div class="d-flex align-center">
       <v-avatar size="55">
@@ -30,13 +30,7 @@ const photoUrl = ref("");
 
 onMounted(async () => {
   if (userStore.user && userStore.user.id) {
-    try {
-      photoUrl.value = await userStore.getUserPhoto(userStore.user.id);
-    } catch (error) {
-      console.error("Error fetching user photo:", error);
-      // Optionally set a default photo URL here
-      photoUrl.value = ""; // Path to default avatar
-    }
+    photoUrl.value = (await userStore.getUserPhoto(userStore.user.id)) || "";
   }
 });
 </script>

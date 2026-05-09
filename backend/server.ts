@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import {connectDB} from './config/db';
+import { connectDB } from './config/db';
 
 //routes
 import authRoutes from './routes/auth.routes';
@@ -23,10 +23,10 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors({ origin: 'http://localhost:5173' })); // Adjust as needed for frontend URL
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/auth", authRoutes);
-app.use("/api/user", userRoutes);
+app.use("/api/users", userRoutes);
 
 
 // Health check endpoint

@@ -2,14 +2,13 @@ import { createRouter, createWebHistory } from "vue-router";
 import { useUserStore } from "@/stores/users.stores";
 
 //Layouts
-import GuestLayout from '@layouts/GuestLayout.vue';
+import GuestLayout from "@layouts/GuestLayout.vue";
 
 //views
 // import Home from "@comps/HelloWorld.vue";
 import AuthView from "@views/auth/AuthView.vue";
-import LoginView from '@views/auth/LoginView.vue';
-import SignUpView from '@views/auth/SignUpView.vue';
-
+import LoginView from "@views/auth/LoginView.vue";
+import SignUpView from "@views/auth/SignUpView.vue";
 
 const routes = [
     {
@@ -21,7 +20,7 @@ const routes = [
                 redirect: () => {
                     const userStore = useUserStore();
                     return userStore.isAuthenticated ? "/dashboard" : "/login";
-                }
+                },
             },
             {
                 path: "",
@@ -30,22 +29,21 @@ const routes = [
                     {
                         path: "login",
                         component: LoginView,
-                        meta: { title: "login" }
+                        meta: { title: "login" },
                     },
                     {
                         path: "signup",
                         component: SignUpView,
-                        meta: { title: "signup" }
+                        meta: { title: "signup" },
                     },
                     {
                         path: "verify",
                         component: () => import("@views/auth/VerifyCodeView.vue"),
-                        meta: { title: "verify" }
+                        meta: { title: "verify" },
                     },
-
-                ]
-            }
-        ]
+                ],
+            },
+        ],
     },
 
     {
@@ -54,18 +52,59 @@ const routes = [
         children: [
             {
                 path: "/dashboard",
+                name: "dashboard",
+                component: () => import("@views/user/Dashboard.vue"),
+                meta: { title: "home" },
+            },
+            {
+                path: "/income",
+                name: "income",
+                component: () => import("@views/user/Dashboard.vue"),
+                meta: { title: "home" },
+            },
+            {
+                path: "/expenses",
+                name: "expenses",
+                component: () => import("@views/user/Dashboard.vue"),
+                meta: { title: "home" },
+            },
+            {
+                path: "/rc-data",
+                name: "rc-data",
                 component: () => import("@views/user/Dashboard.vue"),
                 meta: { title: "home" }
-            }
-        ]
-    }
-
+            },
+            {
+                path: "/bills",
+                name: "bills",
+                component: () => import("@views/user/Dashboard.vue"),
+                meta: { title: "home" },
+            },
+            {
+                path: "/summaries",
+                name: "summaries",
+                component: () => import("@views/user/Dashboard.vue"),
+                meta: { title: "home" },
+            },
+            {
+                path: "/plans",
+                name: "plans",
+                component: () => import("@views/user/Dashboard.vue"),
+                meta: { title: "home" },
+            },
+            {
+                path: "/profile",
+                name: "profile",
+                component: () => import("@views/user/Dashboard.vue"),
+                meta: { title: "home" },
+            },
+        ],
+    },
 ];
-
 
 const router = createRouter({
     history: createWebHistory(),
-    routes
+    routes,
 });
 
 // Initialize user from localStorage on first load
@@ -77,4 +116,4 @@ router.beforeEach(async (to, from, next) => {
     next();
 });
 
-export default router; 
+export default router;

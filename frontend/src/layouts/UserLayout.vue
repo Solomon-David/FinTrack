@@ -1,10 +1,9 @@
 <template>
   <v-app>
     <v-container class="fill-height">
-      <MenuComponent :title="title" />
+      <NavComponent :title="title" />
       <v-row align="center" justify="center">
         <v-col cols="12" md="4" class="text-center">
-          
           <h2 class="mt-4">{{ userStore.user?.nickname }}</h2>
         </v-col>
       </v-row>
@@ -17,7 +16,7 @@
 import { useRoute } from "vue-router";
 import { useUserStore } from "../stores/users.stores";
 import { ref, onMounted } from "vue";
-import MenuComponent from "@components/shared/MenuComponent.vue";
+import NavComponent from "@components/shared/NavComponent.vue";
 
 const userStore = useUserStore();
 const route = useRoute();

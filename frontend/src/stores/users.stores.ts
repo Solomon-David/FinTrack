@@ -174,24 +174,24 @@ export const useUserStore = defineStore('user', {
     // end of verify account
 
     // forgot password
-      async forgotPassword(email: string) {
-        this.isLoading = true;
-        this.error = null;
-        this.message = '';
-        try {
-          const response = await userApi.forgotPassword(email);
-          this.message = response.data.message || 'Password reset link sent to your email!';
-          return { status: response.data.success, message: this.message };
-        } catch (error: any) {
-          const message = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to send reset link';
-          this.error = message;
-          return { status: false, message };  
-        } finally {
-          this.isLoading = false;
-        }
-      },
+    async forgotPassword(email: string) {
+      this.isLoading = true;
+      this.error = null;
+      this.message = '';
+      try {
+        const response = await userApi.forgotPassword(email);
+        this.message = response.data.message || 'Password reset link sent to your email!';
+        return { status: response.data.success, message: this.message };
+      } catch (error: any) {
+        const message = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to send reset link';
+        this.error = message;
+        return { status: false, message };
+      } finally {
+        this.isLoading = false;
+      }
+    },
     // end of forgot password
-  
+
     // reset password
     async resetPassword(email: string, code: string, newPassword: string) {
       this.isLoading = true;
@@ -204,7 +204,7 @@ export const useUserStore = defineStore('user', {
       } catch (error: any) {
         const message = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to reset password';
         this.error = message;
-        return { status: false, message };  
+        return { status: false, message };
       } finally {
         this.isLoading = false;
       }
@@ -217,11 +217,11 @@ export const useUserStore = defineStore('user', {
         const response = await userApi.getUserPhoto(userId);
         return response.data.photoUrl || '';
       } catch (error) {
-        console.error('Error fetching user photo:', error);
-        throw new Error('Failed to fetch user photo');
+        console.log('Photo not found:', error);
+        return ('Failed to fetch user photo');
       }
     }
-    
-    
+
+
   },
 });
