@@ -30,10 +30,10 @@
       block
       variant="flat"
       rounded
-      :loading="isLoading"
+      :loading="userStore.isLoading"
       class="mb-4 text-light text-none"
     >
-      {{ isLoading ? "Verifying..." : "Verify Email" }}
+      {{ userStore.isLoading ? "Verifying..." : "Verify Email" }}
     </v-btn>
   </v-form>
 
@@ -44,7 +44,7 @@
         variant="text"
         color="primary"
         @click="handleResend"
-        :disabled="isLoading"
+        :disabled="userStore.isLoading"
         class="ml-1 text-none"
       >
         Resend
@@ -65,7 +65,6 @@ import { ref, computed } from "vue";
 import { useUserStore } from "@/stores/users.stores";
 import { useRoute, useRouter } from "vue-router";
 const userStore = useUserStore();
-const isLoading = computed(() => userStore.isLoading);
 const route = useRoute();
 const router = useRouter();
 const email = (route.query.email as string) || "";
@@ -95,19 +94,25 @@ function pasteCodeFromClipboard() {
 }
 
 async function handleVerify() {
+  userStore.isLoading = true;
   try {
     await userStore.verifyAccount(email, code.value);
     router.push("/dashboard");
   } catch (err) {
     error.value = userStore.error || "Failed to verify code. Please try again.";
+  } finally {
+    userStore.isLoading = false;
   }
 }
 
 async function handleResend() {
+  userStore.isLoading = true;
   try {
     await userStore.resendVerificationCode(email);
   } catch (err) {
     error.value = userStore.error || "Failed to resend code. Please try again.";
+  } finally {
+    userStore.isLoading = false;
   }
 }
 </script>

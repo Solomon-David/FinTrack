@@ -53,7 +53,7 @@
     </v-text-field>
     <!-- yellow button for sign up -->
     <v-btn
-      class="text-bold text-none bg-primary text-light py-5 mt-5"
+      class="text-bold text-h5 text-none bg-primary text-light py-5 mt-5"
       variant="flat"
       rounded
       block
@@ -90,6 +90,7 @@ const password = ref("");
 const router = useRouter();
 
 const handleSignUp = async () => {
+  userStore.isLoading = true;
   try {
     await userStore.signUp(email.value, password.value, firstName.value, lastName.value);
     router.push({
@@ -98,6 +99,8 @@ const handleSignUp = async () => {
     });
   } catch (error) {
     // Error is handled by the store and displayed via userStore.error
+  } finally {
+    userStore.isLoading = false;
   }
 };
 

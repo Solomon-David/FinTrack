@@ -39,11 +39,12 @@
 
     <!-- yellow button for login -->
     <v-btn
-      class="text-bold text-none bg-primary text-light py-5 mt-5"
+      class="text-bold text-h5 text-none bg-primary text-light py-5 mt-5"
       variant="flat"
       rounded
       block
       type="submit"
+      :loading="userStore.isLoading"
     >
       Login
     </v-btn>
@@ -83,6 +84,7 @@ const showAlert = ref(false);
 const openDialog = ref(false);
 
 const handleLogin = async () => {
+  userStore.isLoading = true;
   try {
     await userStore.login(email.value, password.value);
     if (userStore.error) {
@@ -96,6 +98,8 @@ const handleLogin = async () => {
   } catch (error) {
     message.value = userStore.error || "Login failed";
     status.value = false;
+  } finally {
+    userStore.isLoading = false;
   }
 
   showAlert.value = true;

@@ -32,7 +32,7 @@ const UserSchema: Schema<IUserModel> = new Schema(
       },
     },
     photoData: {
-      type: String, 
+      type: String,
       trim: true,
     },
     dob: {
@@ -49,7 +49,7 @@ const UserSchema: Schema<IUserModel> = new Schema(
       required: true,
       select: false,
     },
-      contacts: [ 
+    contacts: [
       {
         name: {
           type: String,
@@ -61,7 +61,7 @@ const UserSchema: Schema<IUserModel> = new Schema(
           trim: true,
         },
       },
-      ],
+    ],
     verified: {
       type: Boolean,
       default: false,
@@ -77,7 +77,7 @@ const UserSchema: Schema<IUserModel> = new Schema(
       trim: true,
     },
     passwordResetCodeExpires: Number,
-    
+
   },
   {
     timestamps: true,
@@ -86,7 +86,7 @@ const UserSchema: Schema<IUserModel> = new Schema(
 );
 
 // Pre-save hook to hash password if modified
-UserSchema.pre<IUserModel>('save', async function(next) {
+UserSchema.pre<IUserModel>('save', async function (next) {
   if (this.isModified('password')) {
     this.password = await hashPassword(this.password);
   }
@@ -94,17 +94,17 @@ UserSchema.pre<IUserModel>('save', async function(next) {
 });
 
 // Instance method to compare password
-UserSchema.methods.comparePassword = async function(password: string): Promise<boolean> {
+UserSchema.methods.comparePassword = async function (password: string): Promise<boolean> {
   return comparePassword(password, this.password);
 };
 
 // Instance method to change password
-UserSchema.methods.changePassword = async function(oldPassword: string, newPassword: string): Promise<void> {
+UserSchema.methods.changePassword = async function (oldPassword: string, newPassword: string): Promise<void> {
   const isMatch = await this.comparePassword(oldPassword);
   if (!isMatch) {
     throw new Error('Old password is incorrect');
   }
-  this.password = newPassword;
+  this.password = await hashPassword(newPassword);
   await this.save();
 };
 

@@ -43,7 +43,7 @@
             <v-text-field
               v-model="newPassword"
               label="New Password"
-              type="password"
+              :type="showPasswordVisibility ? 'text' : 'password'"
               color="black"
               base-color="black"
               variant="underlined"

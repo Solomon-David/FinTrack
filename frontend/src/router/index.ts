@@ -13,49 +13,49 @@ import SignUpView from '@views/auth/SignUpView.vue';
 
 const routes = [
     {
-    path: "/",
-    component: GuestLayout,
-    children:[
-        {
-            path: "/",
-            redirect: () => {
-                const userStore = useUserStore();
-                return userStore.isAuthenticated ? "/dashboard" : "/signup";
+        path: "/",
+        component: GuestLayout,
+        children: [
+            {
+                path: "/",
+                redirect: () => {
+                    const userStore = useUserStore();
+                    return userStore.isAuthenticated ? "/dashboard" : "/login";
+                }
+            },
+            {
+                path: "",
+                component: AuthView,
+                children: [
+                    {
+                        path: "login",
+                        component: LoginView,
+                        meta: { title: "login" }
+                    },
+                    {
+                        path: "signup",
+                        component: SignUpView,
+                        meta: { title: "signup" }
+                    },
+                    {
+                        path: "verify",
+                        component: () => import("@views/auth/VerifyCodeView.vue"),
+                        meta: { title: "verify" }
+                    },
+
+                ]
             }
-        },
-        {
-            path: "",
-            component: AuthView,
-            children: [
-                {
-                    path: "login",
-                    component: LoginView,
-                    meta: { title: "login" }
-                },
-                {
-                    path: "signup",
-                    component: SignUpView,
-                    meta: { title: "signup" }
-                },
-                {
-                    path: "verify",
-                    component: () => import("@views/auth/VerifyCodeView.vue"),
-                    meta: { title: "verify" }
-                },
-               
-            ]
-        }
         ]
     },
 
     {
         path: "/",
         component: () => import("@layouts/UserLayout.vue"),
-        children:[
-            {   
+        children: [
+            {
                 path: "/dashboard",
                 component: () => import("@views/user/Dashboard.vue"),
-                meta: { title: "dashboard" }
+                meta: { title: "home" }
             }
         ]
     }
@@ -63,7 +63,7 @@ const routes = [
 ];
 
 
-const router = createRouter ({
+const router = createRouter({
     history: createWebHistory(),
     routes
 });

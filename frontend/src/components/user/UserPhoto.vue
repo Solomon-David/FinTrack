@@ -1,14 +1,24 @@
-/* * UserPhoto.vue * Component to display user's profile picture * Fetches photo from
-backend and displays it * If no photo, shows default avatar */
 <template>
-  <v-avatar size="50">
-    <template v-if="photoUrl">
-      <v-img :src="photoUrl" alt="User Photo" />
-    </template>
-    <template v-else>
-      <v-icon size="55">mdi-account-circle</v-icon>
-    </template>
-  </v-avatar>
+  <!-- align-end pushes the nickname and the avatar group to the right edge -->
+  <div class="d-flex flex-column align-end justify-center">
+    <!-- Top Row: Avatar and Arrow -->
+    <div class="d-flex align-center">
+      <v-avatar size="55">
+        <v-img v-if="photoUrl" :src="photoUrl" />
+        <v-icon v-else size="55" color="secondary">mdi-account-circle</v-icon>
+      </v-avatar>
+
+      <!-- Negative margin pulls the arrow closer to the avatar -->
+      <v-icon color="grey" class="ml-n1">mdi-menu-down</v-icon>
+    </div>
+
+    <!-- Bottom Row: Nickname -->
+    <span
+      class="text-caption font-weight-bold mt-n1 text-right"
+      v-html="userStore.user?.nickname?.replaceAll(' ', '<br>')"
+    >
+    </span>
+  </div>
 </template>
 
 <script setup lang="ts">
