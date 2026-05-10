@@ -7,6 +7,8 @@ import { SendEmailDTO, UserRequest, IUserModel } from '../interfaces';
 import { generateAccessToken, generateRefreshToken, verifyAccessToken, verifyRefreshToken } from "../utils/generateToken";
 import { generateVerificationCode } from "../utils/generateVerificationCode";
 import { hashPassword } from '../config/bcryptjs';
+import Bill from "../models/Bill";
+import Plan from "../models/Plan";
 
 
 //for creating new user
@@ -148,29 +150,60 @@ export const resendVerificationEmail = async (req: Request, res: Response) => {
     }
 }
 
+// Helper to compute summaries — reused in login and getUserDetails
+const computeUserDetails = async (userId: string) => {
+    const [bills, plans] = await Promise.all([
+        Bill.find({ user: userId }),
+        Plan.find({ user: userId })
+    ]);
+
+    const billsSummary = {
+        total: bills.length,
+        paid: bills.filter(b => b.status === "Paid").length,
+        unpaid: bills.filter(b => b.status === "Unpaid").length,
+        overdue: bills.filter(b => b.status === "Overdue").length,
+        part: bills.filter(b => b.status === "Part").length,
+    };
+
+    const plansSummary = {
+        total: plans.length,
+        completed: plans.filter(p => p.status === "Completed").length,
+        inProgress: plans.filter(p => p.status === "In Progress").length,
+        overdue: plans.filter(p => p.status === "Overdue").length,
+    };
+
+    return { billsSummary, plansSummary };
+};
+
 export const loginUser = async (req: Request, res: Response) => {
     const { email, password } = req.body;
-    // if email or password is null
     if (!email || !password) return res.status(400).json({ message: "Incomplete credentials", success: false });
 
     try {
-        // get user by email
         const user: IUserModel | null = <IUserModel>await User.findOne({ email }).select('+password');
         if (!user) {
             return res.status(404).json({ message: "User does not exist", success: false });
         }
-        //compare passwords
+
         const passwordMatch: boolean | undefined = await user?.comparePassword(password);
 
         if (passwordMatch) {
             const accessToken = generateAccessToken({ userId: user._id });
             const refreshToken = generateRefreshToken({ userId: user._id });
-            // Atomic update
-            const updatedUser = await User.findOneAndUpdate(
+
+            await User.findOneAndUpdate(
                 { _id: user._id },
-                { $set: { 'tokens.refreshToken': refreshToken } },
+                {
+                    $set: {
+                        'tokens.refreshToken': refreshToken,
+                        lastSeen: new Date(), // reset inactivity clock on login
+                    }
+                },
                 { new: true }
             );
+
+            const { billsSummary, plansSummary } = await computeUserDetails(user._id.toString());
+
             return res.status(200).json({
                 message: `Welcome, ${user.nickname}`, success: true, user: {
                     id: user._id,
@@ -179,42 +212,62 @@ export const loginUser = async (req: Request, res: Response) => {
                     lastName: user.lastName,
                     nickname: user.nickname,
                     photoData: user.photoData,
-                    tokens: {
-                        accessToken,
-                        refreshToken
-                    },
-                    dob: user.dob
+                    tokens: { accessToken, refreshToken },
+                    dob: user.dob,
+                    billsSummary,
+                    plansSummary,
                 }
             });
+        } else {
+            return res.status(404).json({ message: "Wrong password", success: false });
         }
-        else {
-            return res.status(404).json({ message: "Wrong password", success: false })
-        }
-    }
-    catch (error) {
+    } catch (error) {
         console.error("Error logging in user:", error);
         res.status(500).json({ error: "Error logging in user", success: false });
     }
-}
+};
+
+export const getUserDetails = async (req: UserRequest, res: Response): Promise<void> => {
+    try {
+        const userId = req.user!.userId;
+        const { billsSummary, plansSummary } = await computeUserDetails(userId);
+
+        res.status(200).json({
+            success: true,
+            message: "User details fetched successfully",
+            data: { billsSummary, plansSummary }
+        });
+    } catch (error: any) {
+        console.error("Error fetching user details:", error);
+        res.status(500).json({
+            success: false,
+            message: error.message || "Internal server error"
+        });
+    }
+};
 
 export const refreshToken = async (req: Request, res: Response) => {
     const { token } = req.body;
-    //if token is missing
     if (!token) return res.status(401).json({ message: "Refresh token required." });
 
     try {
         const decoded = verifyRefreshToken(token);
+
+        // Update lastSeen so the inactivity clock resets on every token refresh
+        await User.findByIdAndUpdate(decoded.userId, {
+            $set: { lastSeen: new Date() }
+        });
+
         const newAccessToken = generateAccessToken({ userId: decoded.userId });
         res.json({ accessToken: newAccessToken });
-    }
-    catch (error) {
-        console.error('Error uploading profile picture:', error);
+    } catch (error) {
+        console.error('Error refreshing token:', error);
         res.status(500).json({
-            error: 'Failed to upload profile picture',
+            error: 'Failed to refresh token',
             success: false,
-        })
+        });
     }
-}
+};
 
 export const logout = async (req: UserRequest, res: Response): Promise<void> => {
     try {
@@ -381,4 +434,6 @@ export const getUserPhoto = async (req: Request, res: Response) => {
         console.error('Error fetching user photo:', error);
         res.status(500).json({ message: error.message || "Internal server error", success: false });
     }
+
 };
+

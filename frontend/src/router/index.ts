@@ -98,6 +98,12 @@ const routes = [
                 component: () => import("@views/user/Dashboard.vue"),
                 meta: { title: "home" },
             },
+            {
+                path: "/preferences",
+                name: "preferences",
+                component: () => import("@views/user/Dashboard.vue"),
+                meta: { title: "Preferences" },
+            },
         ],
     },
 ];

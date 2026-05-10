@@ -1,227 +1,234 @@
 import { defineStore } from 'pinia';
+import { ref, computed } from 'vue';
 import type { User } from '../types';
 import * as userApi from '@/api/users.api';
 
-export const useUserStore = defineStore('user', {
-  state: () => ({
-    user: null as User | null,
-    isLoading: false,
-    error: null as string | null,
-    message: '',
-    status: false,
-  }),
-  getters: {
-    isAuthenticated: (state) => !!state.user && !!state.user.tokens?.accessToken,
-  },
-  actions: {
-    // Initialize user from localStorage
-    initializeUser() {
-      try {
-        const storedUser = localStorage.getItem('user');
-        const storedToken = localStorage.getItem('token');
+export const useUserStore = defineStore('user', () => {
+  const user = ref<User | null>(null);
+  const isLoading = ref(false);
+  const error = ref<string | null>(null);
+  const message = ref('');
+  const status = ref(false);
+  const billsSummary = ref<Record<string, number>>({});
+  const plansSummary = ref<Record<string, number>>({});
 
-        if (storedUser && storedToken) {
-          const user = JSON.parse(storedUser);
-          // Validate that user has required fields and token matches
-          if (user && user.id && user.tokens?.accessToken === storedToken) {
-            this.user = user;
-            return true;
-          }
+  const isAuthenticated = computed(() => !!user.value && !!user.value.tokens?.accessToken);
+
+  function initializeUser(): boolean {
+    try {
+      const storedUser = localStorage.getItem('user');
+      const storedToken = localStorage.getItem('token');
+      if (storedUser && storedToken) {
+        const parsed = JSON.parse(storedUser);
+        if (parsed && parsed.id && parsed.tokens?.accessToken === storedToken) {
+          user.value = parsed;
+          // Restore summaries if stored
+          const storedBills = localStorage.getItem('billsSummary');
+          const storedPlans = localStorage.getItem('plansSummary');
+          if (storedBills) billsSummary.value = JSON.parse(storedBills);
+          if (storedPlans) plansSummary.value = JSON.parse(storedPlans);
+          return true;
         }
-      } catch (err) {
-        console.warn('Failed to initialize user from storage:', err);
       }
-
-      // Clear invalid data
-      this.clearUserFromStorage();
-      return false;
-    },
-    // end of initialize user
-
-    // Save user to localStorage
-    saveUserToStorage(user: User) {
-      localStorage.setItem('user', JSON.stringify(user));
-      if (user.tokens?.accessToken) {
-        localStorage.setItem('token', user.tokens.accessToken);
-      }
-    },
-    // end of save user to storage
-
-    // Clear user from localStorage
-    clearUserFromStorage() {
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
-    },
-    // end of clear user from storage
-
-    // signUp
-    async signUp(email: string, password: string, firstName: string, lastName: string) {
-      this.isLoading = true;
-      this.error = null;
-      this.message = '';
-
-      try {
-        const response = await userApi.signUp({ email, password, firstName, lastName });
-
-        const newUser: User = response.data;
-        this.user = newUser;
-        this.saveUserToStorage(newUser);
-        this.message = response.data.message || 'Account created successfully! Please verify your email.';
-        return newUser;
-      } catch (err: any) {
-        const message = err.response?.data?.message || err.response?.data?.error || err.message || 'Signup failed';
-        this.error = message;
-        throw new Error(message);
-      } finally {
-        this.isLoading = false;
-      }
-    },
-    //end of signUp
-
-    //login
-    async login(email: string, password: string) {
-      this.isLoading = true;
-      this.error = null;
-      this.message = '';
-      this.status = false;
-      try {
-        const response = await userApi.login(email, password);
-
-        const loggedInUser: User = response.data.user;
-        this.user = loggedInUser;
-        this.saveUserToStorage(loggedInUser);
-        this.message = response.data.message || 'Login successful!';
-        this.status = response.data.status;
-        return loggedInUser;
-      } catch (err: any) {
-        // Extract error message from server response
-        const message = err.response?.data?.message || err.response?.data?.error || err.message || 'Login failed';
-        this.error = message;
-        throw new Error(message);
-      } finally {
-        this.isLoading = false;
-      }
-    },
-    //end of login
-
-    //logout
-    logout() {
-      this.user = null;
-      this.clearUserFromStorage();
-      this.message = 'Logged out successfully.';
-    },
-    // end of logout
-
-    //refresh token
-    async refreshToken() {
-      if (!this.user?.tokens?.refreshToken) return { success: false, message: 'No refresh token available' };
-
-      try {
-        const response = await userApi.refreshToken(this.user.tokens.refreshToken);
-
-        // Update stored token if new token provided
-        if (response.data.accessToken) {
-          this.user.tokens.accessToken = response.data.accessToken;
-          this.saveUserToStorage(this.user);
-        }
-
-        this.message = response.data.message || 'Token refreshed successfully.';
-        return { success: true, message: this.message };
-      } catch (err: any) {
-        const message = err.response?.data?.message || err.response?.data?.error || err.message || 'Token refresh failed';
-        this.error = message;
-        return { success: false, message };
-      }
-    },
-    //end of refresh token
-
-    //resend verification code
-    async resendVerificationCode(email: string) {
-      this.isLoading = true;
-      this.error = null;
-      this.message = '';
-
-      try {
-        const response = await userApi.resendVerificationCode(email);
-        this.message = response.data.message || 'Verification code resent to your email!';
-      } catch (error: any) {
-        const message = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to resend verification code';
-        this.error = message;
-        throw new Error(message);
-      } finally {
-        this.isLoading = false;
-      }
-    },
-    // end of resend verification code
-
-    // verify account
-    async verifyAccount(email: string, code: string) {
-      this.isLoading = true;
-      this.error = null;
-      this.message = '';
-
-      try {
-        const response = await userApi.verifyAccount(email, code);
-        this.message = response.data.message || 'Account verified successfully!';
-      } catch (error: any) {
-        const message = error.response?.data?.message || error.response?.data?.error || error.message || 'Account verification failed';
-        this.error = message;
-        throw new Error(message);
-      } finally {
-        this.isLoading = false;
-      }
-    },
-    // end of verify account
-
-    // forgot password
-    async forgotPassword(email: string) {
-      this.isLoading = true;
-      this.error = null;
-      this.message = '';
-      try {
-        const response = await userApi.forgotPassword(email);
-        this.message = response.data.message || 'Password reset link sent to your email!';
-        return { status: response.data.success, message: this.message };
-      } catch (error: any) {
-        const message = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to send reset link';
-        this.error = message;
-        return { status: false, message };
-      } finally {
-        this.isLoading = false;
-      }
-    },
-    // end of forgot password
-
-    // reset password
-    async resetPassword(email: string, code: string, newPassword: string) {
-      this.isLoading = true;
-      this.error = null;
-      this.message = '';
-      try {
-        const response = await userApi.resetPassword(email, code, newPassword);
-        this.message = response.data.message || 'Password reset successfully!';
-        return { status: response.data.success, message: this.message };
-      } catch (error: any) {
-        const message = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to reset password';
-        this.error = message;
-        return { status: false, message };
-      } finally {
-        this.isLoading = false;
-      }
-    },
-    //end of reset password
-
-    // getting user photo
-    async getUserPhoto(userId: string): Promise<string> {
-      try {
-        const response = await userApi.getUserPhoto(userId);
-        return response.data.photoUrl || '';
-      } catch (error) {
-        console.log('Photo not found:', error);
-        return ('Failed to fetch user photo');
-      }
+    } catch (err) {
+      console.warn('Failed to initialize user from storage:', err);
     }
+    clearUserFromStorage();
+    return false;
+  }
 
+  function saveUserToStorage(u: User) {
+    localStorage.setItem('user', JSON.stringify(u));
+    if (u.tokens?.accessToken) {
+      localStorage.setItem('token', u.tokens.accessToken);
+    }
+  }
 
-  },
+  function saveSummariesToStorage() {
+    localStorage.setItem('billsSummary', JSON.stringify(billsSummary.value));
+    localStorage.setItem('plansSummary', JSON.stringify(plansSummary.value));
+  }
+
+  function clearUserFromStorage() {
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('billsSummary');
+    localStorage.removeItem('plansSummary');
+  }
+
+  async function signUp(email: string, password: string, firstName: string, lastName: string) {
+    isLoading.value = true;
+    error.value = null;
+    message.value = '';
+    try {
+      const response = await userApi.signUp({ email, password, firstName, lastName });
+      const newUser: User = response.data;
+      user.value = newUser;
+      saveUserToStorage(newUser);
+      message.value = response.data.message || 'Account created successfully! Please verify your email.';
+      return newUser;
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.response?.data?.error || err.message || 'Signup failed';
+      error.value = msg;
+      throw new Error(msg);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  async function login(email: string, password: string) {
+    isLoading.value = true;
+    error.value = null;
+    message.value = '';
+    status.value = false;
+    try {
+      const response = await userApi.login(email, password);
+      const loggedInUser: User = response.data.user;
+
+      // Extract summaries from login response
+      billsSummary.value = loggedInUser.billsSummary ?? {};
+      plansSummary.value = loggedInUser.plansSummary ?? {};
+
+      user.value = loggedInUser;
+      saveUserToStorage(loggedInUser);
+      saveSummariesToStorage();
+
+      message.value = response.data.message || 'Login successful!';
+      status.value = response.data.status;
+      return loggedInUser;
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.response?.data?.error || err.message || 'Login failed';
+      error.value = msg;
+      throw new Error(msg);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  function logout() {
+    user.value = null;
+    clearUserFromStorage();
+    message.value = 'Logged out successfully.';
+  }
+
+  async function refreshToken() {
+    if (!user.value?.tokens?.refreshToken) return { success: false, message: 'No refresh token available' };
+    try {
+      const response = await userApi.refreshToken(user.value.tokens.refreshToken);
+      if (response.data.accessToken) {
+        user.value.tokens.accessToken = response.data.accessToken;
+        saveUserToStorage(user.value);
+      }
+      message.value = response.data.message || 'Token refreshed successfully.';
+      return { success: true, message: message.value };
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.response?.data?.error || err.message || 'Token refresh failed';
+      error.value = msg;
+      return { success: false, message: msg };
+    }
+  }
+
+  async function resendVerificationCode(email: string) {
+    isLoading.value = true;
+    error.value = null;
+    message.value = '';
+    try {
+      const response = await userApi.resendVerificationCode(email);
+      message.value = response.data.message || 'Verification code resent to your email!';
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to resend verification code';
+      error.value = msg;
+      throw new Error(msg);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  async function verifyAccount(email: string, code: string) {
+    isLoading.value = true;
+    error.value = null;
+    message.value = '';
+    try {
+      const response = await userApi.verifyAccount(email, code);
+      message.value = response.data.message || 'Account verified successfully!';
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.response?.data?.error || err.message || 'Account verification failed';
+      error.value = msg;
+      throw new Error(msg);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  async function forgotPassword(email: string) {
+    isLoading.value = true;
+    error.value = null;
+    message.value = '';
+    try {
+      const response = await userApi.forgotPassword(email);
+      message.value = response.data.message || 'Password reset link sent to your email!';
+      return { status: response.data.success, message: message.value };
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to send reset link';
+      error.value = msg;
+      return { status: false, message: msg };
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  async function resetPassword(email: string, code: string, newPassword: string) {
+    isLoading.value = true;
+    error.value = null;
+    message.value = '';
+    try {
+      const response = await userApi.resetPassword(email, code, newPassword);
+      message.value = response.data.message || 'Password reset successfully!';
+      return { status: response.data.success, message: message.value };
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to reset password';
+      error.value = msg;
+      return { status: false, message: msg };
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  async function getUserPhoto(userId: string): Promise<string> {
+    try {
+      const response = await userApi.getUserPhoto(userId);
+      return response.data.photoUrl || '';
+    } catch (err) {
+      console.log('Photo not found:', err);
+      return '';
+    }
+  }
+
+  async function getUserDetails() {
+    isLoading.value = true;
+    error.value = null;
+    try {
+      const response = await userApi.getUserDetails();
+      const { billsSummary: bills, plansSummary: plans } = response.data.data;
+      billsSummary.value = bills;
+      plansSummary.value = plans;
+      saveSummariesToStorage();
+      return response.data.data;
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'Failed to fetch user details';
+      error.value = msg;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  return {
+    user, isLoading, error, message, status, billsSummary, plansSummary,
+    isAuthenticated,
+    initializeUser, saveUserToStorage, clearUserFromStorage,
+    signUp, login, logout, refreshToken,
+    resendVerificationCode, verifyAccount,
+    forgotPassword, resetPassword,
+    getUserPhoto, getUserDetails,
+  };
 });

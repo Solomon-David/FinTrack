@@ -11,10 +11,10 @@
 
     <v-spacer></v-spacer>
 
-    <!-- This container holds the UserPhoto -->
+    <!-- This container holds the Avatar -->
     <div>
       <template v-if="userStore.isAuthenticated">
-        <UserPhoto />
+        <Avatar />
       </template>
       <v-btn v-else icon="mdi-logout" variant="plain" color="accent" class="text-h6" />
     </div>
@@ -24,7 +24,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useUserStore } from "@/stores/users.stores";
-import UserPhoto from "@components/user/UserPhoto.vue";
+import Avatar from "@components/user/Avatar.vue";
 import MenuDrawerComponent from "@components/shared/MenuDrawerComponent.vue";
 const props = defineProps<{ title?: string | undefined }>();
 

@@ -1,17 +1,27 @@
 <template>
   <v-app>
-    <v-container class="fill-height">
-      <NavComponent :title="title" />
-      <v-row align="center" justify="center">
-        <v-col cols="12" md="4" class="text-center">
-          <h2 class="mt-4">{{ userStore.user?.nickname }}</h2>
-        </v-col>
-      </v-row>
-      <router-view />
-    </v-container>
+    <!-- Header -->
+    <NavComponent :title="title" />
+
+    <!-- Body -->
+    <v-main>
+      <v-container>
+        <router-view />
+      </v-container>
+    </v-main>
+
+    <!-- Footer -->
+    <v-footer
+      app
+      height="60"
+      class="d-flex justify-center align-center border-t-thin border-accent"
+    >
+      <span class="text-caption text-medium-emphasis">
+        &copy; Solos {{ new Date().getFullYear() }}
+      </span>
+    </v-footer>
   </v-app>
 </template>
-
 <script setup lang="ts">
 import { useRoute } from "vue-router";
 import { useUserStore } from "../stores/users.stores";

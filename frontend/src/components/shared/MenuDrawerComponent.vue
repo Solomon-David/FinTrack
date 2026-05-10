@@ -1,13 +1,13 @@
 <template>
   <v-navigation-drawer
     v-model="drawerModel"
-    width="260"
+    width="300"
     temporary
     style="top: 0; height: 100%; border-radius: 0 16px 16px 0"
   >
     <!-- Logo + App Name -->
     <div class="d-flex align-center ga-3 px-4 py-10">
-      <v-avatar size="42" rounded="lg">
+      <v-avatar size="60" rounded="lg">
         <v-img :src="Logo" alt="FinTrack Logo" />
       </v-avatar>
       <span class="font-weight-black text-h6 text-secondary">FinTrack</span>
@@ -93,6 +93,15 @@
         rounded="lg"
         :to="{ name: 'profile' }"
       />
+      <v-list-item
+        prepend-icon="mdi-cog-outline"
+        title="Preferences"
+        rounded="lg"
+        :to="{ name: 'preferences' }"
+      />
+
+      <v-divider class="my-2" />
+
       <v-list-item
         prepend-icon="mdi-logout"
         title="Logout"

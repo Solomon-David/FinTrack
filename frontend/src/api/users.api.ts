@@ -32,3 +32,7 @@ export async function resetPassword(email: string, code: string, newPassword: st
 export async function getUserPhoto(userId: string) {
   return axiosInstance.get(`/users/${userId}/photo`, { responseType: 'blob' });
 }
+
+export async function getUserDetails() {
+  return axiosInstance.get('/users/user-details');
+}
