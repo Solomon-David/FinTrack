@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid class="pa-4">
+  <v-container fluid>
     <!-- 1. Welcome Section -->
     <v-row align="center" justify="space-between" class="mb-6 ga-4 border-b-sm">
       <!-- Left: Avatar + Welcome text -->

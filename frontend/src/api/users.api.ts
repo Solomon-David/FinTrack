@@ -36,3 +36,24 @@ export async function getUserPhoto(userId: string) {
 export async function getUserDetails() {
   return axiosInstance.get('/users/user-details');
 }
+
+export async function updateProfile(payload: {
+  firstName: string;
+  lastName: string;
+  nickname?: string;
+  email: string;
+}) {
+  return axiosInstance.put('/users/update-profile', payload);
+}
+
+export async function uploadProfilePicture(file: File) {
+  const formData = new FormData();
+  formData.append('profilePicture', file);
+  return axiosInstance.post('/users/upload-photo', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+}
+
+export async function changePassword(currentPassword: string, newPassword: string) {
+  return axiosInstance.put('/users/change-password', { currentPassword, newPassword });
+}

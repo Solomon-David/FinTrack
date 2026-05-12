@@ -1,11 +1,14 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { connectDB } from './config/db';
+import { connectDB } from './config/db.ts';
 
 //routes
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
+
+// Load environment variables
+dotenv.config();
 
 // Database connection
 connectDB().catch((err: Error) => {
@@ -13,21 +16,25 @@ connectDB().catch((err: Error) => {
   process.exit(1);
 });
 
-// Load environment variables
-dotenv.config();
-
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors({ origin: 'http://localhost:5173' })); // Adjust as needed for frontend URL
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(cors({ origin: 'http://localhost:5173' }));
+
+// Skip body parsers for multipart/form-data — multer handles those
+app.use((req, res, next) => {
+  const contentType = req.headers['content-type'] || '';
+  if (contentType.includes('multipart/form-data')) {
+    return next();
+  }
+  express.json()(req, res, () => {
+    express.urlencoded({ extended: true })(req, res, next);
+  });
+});
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
-
 
 // Health check endpoint
 app.get('/api/health', (req: Request, res: Response) => {
@@ -39,12 +46,10 @@ app.get('/api/health', (req: Request, res: Response) => {
   });
 });
 
-// Placeholder for other routes
 app.get('/', (req: Request, res: Response) => {
   res.json({ message: 'Welcome to FinTrack API' });
 });
 
-// Start server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT} at ${new Date().toISOString()}`);
 });

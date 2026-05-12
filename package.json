@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "front": "cd frontend && npm run dev",
-    "back": "cd backend && node server.ts"
+    "back": "cd backend && node server.ts",
+    "dev": "concurrently \"npm run front\" \"npm run back\""
   },
   "repository": {
     "type": "git",
@@ -20,9 +21,7 @@
     "url": "https://github.com/Solomon-David/FinTrack/issues"
   },
   "homepage": "https://github.com/Solomon-David/FinTrack#readme",
-  "dependencies": {
-   
-  },
+  "dependencies": {},
   "devDependencies": {
     "vite": "^7.1.5"
   }

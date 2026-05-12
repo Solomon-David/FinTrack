@@ -1,5 +1,5 @@
 <template>
-  <v-app>
+  <v-app class="w-100">
     <!-- Header -->
     <NavComponent :title="title" />
 

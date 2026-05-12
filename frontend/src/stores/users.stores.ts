@@ -5,6 +5,7 @@ import * as userApi from '@/api/users.api';
 
 export const useUserStore = defineStore('user', () => {
   const user = ref<User | null>(null);
+  const photoData = computed(() => user.value?.photoData ?? '');
   const isLoading = ref(false);
   const error = ref<string | null>(null);
   const message = ref('');
@@ -22,7 +23,6 @@ export const useUserStore = defineStore('user', () => {
         const parsed = JSON.parse(storedUser);
         if (parsed && parsed.id && parsed.tokens?.accessToken === storedToken) {
           user.value = parsed;
-          // Restore summaries if stored
           const storedBills = localStorage.getItem('billsSummary');
           const storedPlans = localStorage.getItem('plansSummary');
           if (storedBills) billsSummary.value = JSON.parse(storedBills);
@@ -84,15 +84,11 @@ export const useUserStore = defineStore('user', () => {
     try {
       const response = await userApi.login(email, password);
       const loggedInUser: User = response.data.user;
-
-      // Extract summaries from login response
       billsSummary.value = loggedInUser.billsSummary ?? {};
       plansSummary.value = loggedInUser.plansSummary ?? {};
-
       user.value = loggedInUser;
       saveUserToStorage(loggedInUser);
       saveSummariesToStorage();
-
       message.value = response.data.message || 'Login successful!';
       status.value = response.data.status;
       return loggedInUser;
@@ -222,13 +218,81 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
+  async function updateProfile(payload: {
+    firstName: string;
+    lastName: string;
+    nickname?: string;
+    email: string;
+  }) {
+    isLoading.value = true;
+    error.value = null;
+    try {
+      const response = await userApi.updateProfile(payload);
+      // Patch the store user with updated fields
+      if (user.value) {
+        user.value = { ...user.value, ...response.data.user };
+        saveUserToStorage(user.value);
+      }
+      message.value = response.data.message || 'Profile updated successfully!';
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'Failed to update profile';
+      error.value = msg;
+      throw new Error(msg);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  async function uploadProfilePicture(file: File): Promise<string> {
+    isLoading.value = true;
+    error.value = null;
+    try {
+      const response = await userApi.uploadProfilePicture(file);
+      const { photoData, photoUrl } = response.data;
+
+      // Update stored photoData on the user object
+      if (user.value) {
+        user.value.photoData = photoData;
+        saveUserToStorage(user.value);
+      }
+
+      message.value = response.data.message || 'Profile picture updated successfully!';
+
+      // Return the ready-to-use URL so the component can update the preview
+      return photoUrl;
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'Failed to upload profile picture';
+      error.value = msg;
+      throw new Error(msg);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  async function changePassword(currentPassword: string, newPassword: string) {
+    isLoading.value = true;
+    error.value = null;
+    try {
+      const response = await userApi.changePassword(currentPassword, newPassword);
+      message.value = response.data.message || 'Password changed successfully!';
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'Failed to change password';
+      error.value = msg;
+      throw new Error(msg);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   return {
     user, isLoading, error, message, status, billsSummary, plansSummary,
+    photoData,
     isAuthenticated,
     initializeUser, saveUserToStorage, clearUserFromStorage,
     signUp, login, logout, refreshToken,
     resendVerificationCode, verifyAccount,
     forgotPassword, resetPassword,
     getUserPhoto, getUserDetails,
-  };
+    updateProfile, uploadProfilePicture, changePassword,
+};
 });

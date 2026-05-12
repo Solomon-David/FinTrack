@@ -1,24 +1,20 @@
 <template>
-  <v-avatar :size="size">
-    <v-img v-if="photoUrl" :src="photoUrl" />
-    <v-icon v-else :size="size" color="secondary">mdi-account-circle</v-icon>
+  <v-avatar :size="size" color="secondary">
+    <v-img v-if="userStore.photoData" :src="userStore.photoData" />
+    <v-icon v-else :size="iconSize" color="white">mdi-account</v-icon>
   </v-avatar>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed } from "vue";
 import { useUserStore } from "@/stores/users.stores";
 
-const props = withDefaults(defineProps<{ size?: string }>(), {
+const props = withDefaults(defineProps<{ size?: string | number }>(), {
   size: "45",
 });
 
 const userStore = useUserStore();
-const photoUrl = ref("");
 
-onMounted(async () => {
-  if (userStore.user && userStore.user.id) {
-    photoUrl.value = (await userStore.getUserPhoto(userStore.user.id)) || "";
-  }
-});
+// Scale the icon slightly smaller than the avatar so it fits with padding
+const iconSize = computed(() => Number(props.size) * 0.75);
 </script>
