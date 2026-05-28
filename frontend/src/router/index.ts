@@ -28,16 +28,19 @@ const routes = [
         children: [
           {
             path: "login",
+            name: "login",
             component: LoginView,
             meta: { title: "login" },
           },
           {
             path: "signup",
+            name: "signup",
             component: SignUpView,
             meta: { title: "signup" },
           },
           {
             path: "verify",
+            name: "verify-email",
             component: () => import("@views/auth/VerifyCodeView.vue"),
             meta: { title: "verify" },
           },

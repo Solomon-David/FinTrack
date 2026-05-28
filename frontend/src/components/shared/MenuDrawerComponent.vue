@@ -30,6 +30,7 @@
         rounded="lg"
         :to="{ name: 'dashboard' }"
       />
+      <v-divider class="my-2" />
 
       <!-- Records Section -->
       <v-list-subheader class="text-caption font-weight-medium mt-2"

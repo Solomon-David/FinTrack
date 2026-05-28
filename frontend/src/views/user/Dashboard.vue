@@ -1,20 +1,22 @@
 <template>
   <v-container fluid>
     <!-- 1. Welcome Section -->
-    <v-row align="center" justify="space-between" class="mb-6 ga-4 border-b-sm">
-      <!-- Left: Avatar + Welcome text -->
+    <v-row align="center" justify="space-between" class="mb-6 border-b-sm">
+      <!-- Photo and name-->
       <v-col class="d-flex align-center ga-3">
         <UserPhoto size="75" />
         <div class="d-flex flex-column">
-          <span class="text-large">Welcome back</span>
-          <span class="font-weight-medium text-h6">{{ userStore.user?.nickname }}</span>
+          <span class="text-body-1 w-100 text-no-wrap">Welcome back</span>
+          <span class="font-weight-bold text-h6">
+            {{ userStore.user?.firstName }} {{ userStore.user?.lastName }}
+          </span>
         </div>
       </v-col>
-      <v-spacer></v-spacer>
-      <!-- Right: Edit + Settings icons -->
+      <v-spacer />
+      <!-- Profile and settings buttons -->
       <v-col>
         <v-row>
-          <v-col cols="12">
+          <v-col cols="12" class="d-flex justify-end">
             <v-btn
               icon="mdi-pencil-outline"
               variant="outlined"
@@ -24,8 +26,8 @@
               :to="{ name: 'profile' }"
             />
           </v-col>
-          <v-spacer></v-spacer>
-          <v-col cols="12">
+          <v-spacer />
+          <v-col cols="12" class="d-flex justify-end">
             <v-btn
               icon="mdi-cog-outline"
               variant="outlined"
@@ -51,20 +53,22 @@
           <span
             class="font-weight-bold"
             :class="
-              userStore.billSummary?.paid < userStore.billSummary?.total ||
-              userStore.billSummary?.total == 0
-                ? 'text-success'
-                : 'text-error'
+              userStore.billsSummary?.paid < userStore.billsSummary?.total ||
+              userStore.billsSummary?.total == 0
+                ? 'text-error'
+                : 'text-success'
             "
-            >{{ userStore.billsSummary.paid }}</span
+            >{{ userStore.billsSummary?.paid ?? 0 }}</span
           >
-          <span class="text-medium-emphasis">/{{ userStore.billsSummary.total }}</span>
+          <span class="text-medium-emphasis"
+            >/{{ userStore.billsSummary?.total ?? 0 }}</span
+          >
         </div>
         <div class="text-caption text-medium-emphasis">Bills Paid</div>
       </v-col>
       <v-col cols="auto" class="text-center">
         <div class="text-h6 font-weight-bold">
-          {{ userStore.plansSummary.total ?? 0 }}
+          {{ userStore.plansSummary?.total ?? 0 }}
         </div>
         <div class="text-caption text-medium-emphasis">Plans</div>
       </v-col>
@@ -81,51 +85,81 @@
         <v-btn
           :color="action.color"
           :prepend-icon="action.icon"
-          class="w-75 text-white text-caption font-weight-light px-2"
+          class="w-100 text-white text-caption font-weight-light"
           height="52"
           rounded="lg"
           @click="openDialog(action.label)"
         >
-          <span v-html="action.label.replace(' ', '<br/>')"></span>
+          {{ action.label }}
         </v-btn>
       </v-col>
     </v-row>
 
-    <!-- Quick Action Dialog -->
-    <v-dialog v-model="dialog" max-width="320">
-      <v-card rounded="lg">
-        <v-card-title class="text-center pt-4 font-weight-bold">
-          {{ dialogTitle }}
-        </v-card-title>
-        <v-card-actions class="justify-center pb-4">
-          <v-btn color="secondary" variant="tonal" @click="dialog = false">Close</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <!-- Dynamic Dialog -->
+    <component :is="dialogComponent" v-if="dialogComponent" v-model="dialog" />
   </v-container>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, shallowRef, defineAsyncComponent } from "vue";
 import { useUserStore } from "@/stores/users.stores";
 import UserPhoto from "@/components/user/UserPhoto.vue";
+import LoadingDialog from "@/components/dialogs/LoadingDialog.vue";
 
 const userStore = useUserStore();
 
 const quickActions = [
-  { label: "Record Expense", icon: "mdi-arrow-up", color: "#1B5E20" },
-  { label: "Record Income", icon: "mdi-arrow-down", color: "#880E4F" },
-  { label: "Create Plan", icon: "mdi-check", color: "#1565C0" },
-  { label: "Record RC-Data", icon: "mdi-phone-outline", color: "#6A1B9A" },
-  { label: "Generate Summary", icon: "mdi-trending-up", color: "#B71C1C" },
-  { label: "Search Records", icon: "mdi-magnify", color: "#4A148C" },
+  {
+    label: "Record Expense",
+    icon: "mdi-arrow-up",
+    color: "#1B5E20",
+    component: () => import("@/components/income/AddIncomeDialog.vue"),
+  },
+  {
+    label: "Record Income",
+    icon: "mdi-arrow-down",
+    color: "#880E4F",
+    component: () => import("@/components/income/AddIncomeDialog.vue"),
+  },
+  {
+    label: "Create Plan",
+    icon: "mdi-check",
+    color: "#1565C0",
+    component: () => import("@/components/income/AddIncomeDialog.vue"),
+  },
+  {
+    label: "Record RC-Data",
+    icon: "mdi-phone-outline",
+    color: "#6A1B9A",
+    component: () => import("@/components/income/AddIncomeDialog.vue"),
+  },
+  {
+    label: "Generate Summary",
+    icon: "mdi-trending-up",
+    color: "#B71C1C",
+    component: () => import("@/components/income/AddIncomeDialog.vue"),
+  },
+  {
+    label: "Search Records",
+    icon: "mdi-magnify",
+    color: "#4A148C",
+    component: () => import("@/components/income/AddIncomeDialog.vue"),
+  },
 ];
 
 const dialog = ref(false);
-const dialogTitle = ref("");
+const dialogComponent = shallowRef<ReturnType<typeof defineAsyncComponent> | null>(null);
 
 function openDialog(label: string) {
-  dialogTitle.value = label;
+  const action = quickActions.find((a) => a.label === label);
+  if (!action) return;
+
+  dialogComponent.value = defineAsyncComponent({
+    loader: action.component,
+    loadingComponent: LoadingDialog,
+    delay: 0,
+  });
+
   dialog.value = true;
 }
 </script>

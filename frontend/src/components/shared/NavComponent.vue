@@ -5,7 +5,7 @@
 
     <v-spacer></v-spacer>
 
-    <v-app-bar-title class="font-weight-bold text-h5 text-black">{{
+    <v-app-bar-title class="font-weight-bold text-h5 text-black text-center">{{
       props.title
     }}</v-app-bar-title>
 

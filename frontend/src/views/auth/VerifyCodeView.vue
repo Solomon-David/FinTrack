@@ -31,7 +31,7 @@
       variant="flat"
       rounded
       :loading="userStore.isLoading"
-      class="mb-4 text-light text-none"
+      class="text-bold text-button text-none bg-primary text-accent py-5 mt-5"
     >
       {{ userStore.isLoading ? "Verifying..." : "Verify Email" }}
     </v-btn>

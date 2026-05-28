@@ -3,15 +3,15 @@ import User from "./User";
 import { IIncome } from "../interfaces";
 
 const IncomeSchema: Schema<IIncome> = new Schema({
-    user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    sender: { type: Schema.Types.ObjectId, ref: 'Contact', required: true },
-    amount: { type: Number, required: true },
-    currency: { type: String },
-    date: { type: Date, required: true },
-    purpose: { type: String }
+  user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  sender: { type: String, required: true },
+  amount: { type: Number, required: true },
+  currency: { type: String },
+  date: { type: Date, required: true },
+  purpose: { type: String }
 }, { timestamps: true });
 
-IncomeSchema.pre<IIncome>("save", async function() {
+IncomeSchema.pre<IIncome>("save", async function () {
   if (!this.currency && this.user) {
     const u = await User.findById(this.user).select("preferredCurrency").lean();
     if (u?.preferredCurrency) {

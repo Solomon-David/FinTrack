@@ -1,7 +1,9 @@
 <template>
   <v-app class="w-100">
+    <ScreenLoader v-if="isLoading" />
+
     <!-- Header -->
-    <NavComponent :title="title" />
+    <NavComponent :title="titleTxt" />
 
     <!-- Body -->
     <v-main>
@@ -23,22 +25,63 @@
   </v-app>
 </template>
 <script setup lang="ts">
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "../stores/users.stores";
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onUnmounted, watch, computed } from "vue";
 import NavComponent from "@components/shared/NavComponent.vue";
+import ScreenLoader from "@components/shared/ScreenLoader.vue";
 
 const userStore = useUserStore();
 const route = useRoute();
-let routeTitle: string | undefined = route.meta.title as string | undefined;
-const title = ref<string | undefined>(
-  `${routeTitle?.charAt(0).toLocaleUpperCase()}${routeTitle?.substring(1)}`
+const router = useRouter();
+const routeTitle = ref<string | undefined>(route.meta.title as string | undefined);
+const isLoading = ref(false);
+
+const titleTxt = computed(() => `${routeTitle?.value.charAt(0).toLocaleUpperCase()}${routeTitle?.value.substring(
+    1
+  )}`);
+
+watch(
+  () => route.meta.title,
+  (title: unknown) => {
+    let titleStr = typeof title === "string" ? title : null;
+    document.title = titleStr
+      ? `${titleStr.charAt(0).toUpperCase() + titleStr.slice(1)} | FinTrack`
+      : "FinTrack";
+    routeTitle.value = title;
+  },
+  { immediate: true }
 );
+
+let removeBeforeGuard: (() => void) | undefined;
+let removeAfterHook: (() => void) | undefined;
+let removeErrorHook: (() => void) | undefined;
 
 onMounted(() => {
   if (!userStore.isAuthenticated) {
     window.location.href = "/login";
   }
-  document.title = ` FinTrack | ${title.value}`;
+  document.title = ` FinTrack | ${titleTxt.value}`;
+
+  removeBeforeGuard = router.beforeEach((to, from, next) => {
+    if (to.fullPath !== from.fullPath) {
+      isLoading.value = true;
+    }
+    next();
+  });
+
+  removeAfterHook = router.afterEach(() => {
+    isLoading.value = false;
+  });
+
+  removeErrorHook = router.onError(() => {
+    isLoading.value = false;
+  });
+});
+
+onUnmounted(() => {
+  removeBeforeGuard?.();
+  removeAfterHook?.();
+  removeErrorHook?.();
 });
 </script>

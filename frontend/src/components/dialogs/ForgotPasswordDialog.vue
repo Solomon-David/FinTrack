@@ -59,7 +59,7 @@
 
           <template v-if="!showCode">
             <v-btn
-              class="text-bold text-none bg-primary text-light py-5 mt-5"
+              class="text-bold text-button text-none bg-primary text-light py-5 mt-5"
               variant="flat"
               rounded
               block
@@ -71,7 +71,7 @@
 
           <template v-else>
             <v-btn
-              class="text-bold text-none bg-primary text-light py-5 mt-5"
+              class="text-bold text-button text-none bg-primary text-light py-5 mt-5"
               variant="flat"
               rounded
               block

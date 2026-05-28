@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { provide, watchEffect } from "vue";
+import { provide } from "vue";
 import { useDisplay } from "vuetify";
 
-const { mobile, name } = useDisplay();
-
+const { mobile } = useDisplay();
 provide("isMobile", mobile);
 </script>
 

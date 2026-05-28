@@ -1,74 +1,87 @@
-import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
-import type { User } from '../types';
-import * as userApi from '@/api/users.api';
+import { defineStore } from "pinia";
+import { ref, computed } from "vue";
+import type { User } from "../types";
+import * as userApi from "@/api/users.api";
 
-export const useUserStore = defineStore('user', () => {
+export const useUserStore = defineStore("user", () => {
   const user = ref<User | null>(null);
-  const photoData = computed(() => user.value?.photoData ?? '');
+  const photoData = computed(() => user.value?.photoData ?? "");
   const isLoading = ref(false);
   const error = ref<string | null>(null);
-  const message = ref('');
+  const message = ref("");
   const status = ref(false);
   const billsSummary = ref<Record<string, number>>({});
   const plansSummary = ref<Record<string, number>>({});
 
-  const isAuthenticated = computed(() => !!user.value && !!user.value.tokens?.accessToken);
+  const isAuthenticated = computed(
+    () => !!user.value && !!user.value.tokens?.accessToken
+  );
 
   function initializeUser(): boolean {
     try {
-      const storedUser = localStorage.getItem('user');
-      const storedToken = localStorage.getItem('token');
+      const storedUser = localStorage.getItem("user");
+      const storedToken = localStorage.getItem("token");
       if (storedUser && storedToken) {
         const parsed = JSON.parse(storedUser);
         if (parsed && parsed.id && parsed.tokens?.accessToken === storedToken) {
           user.value = parsed;
-          const storedBills = localStorage.getItem('billsSummary');
-          const storedPlans = localStorage.getItem('plansSummary');
+          const storedBills = localStorage.getItem("billsSummary");
+          const storedPlans = localStorage.getItem("plansSummary");
           if (storedBills) billsSummary.value = JSON.parse(storedBills);
           if (storedPlans) plansSummary.value = JSON.parse(storedPlans);
           return true;
         }
       }
     } catch (err) {
-      console.warn('Failed to initialize user from storage:', err);
+      console.warn("Failed to initialize user from storage:", err);
     }
     clearUserFromStorage();
     return false;
   }
 
-  function saveUserToStorage(u: User) {
-    localStorage.setItem('user', JSON.stringify(u));
-    if (u.tokens?.accessToken) {
-      localStorage.setItem('token', u.tokens.accessToken);
+  function saveUserToStorage(u: User | null) {
+    localStorage.setItem("user", JSON.stringify(u));
+    if (u?.tokens?.accessToken) {
+      localStorage.setItem("token", u?.tokens.accessToken);
     }
   }
 
   function saveSummariesToStorage() {
-    localStorage.setItem('billsSummary', JSON.stringify(billsSummary.value));
-    localStorage.setItem('plansSummary', JSON.stringify(plansSummary.value));
+    localStorage.setItem("billsSummary", JSON.stringify(billsSummary.value));
+    localStorage.setItem("plansSummary", JSON.stringify(plansSummary.value));
   }
 
   function clearUserFromStorage() {
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    localStorage.removeItem('billsSummary');
-    localStorage.removeItem('plansSummary');
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    localStorage.removeItem("billsSummary");
+    localStorage.removeItem("plansSummary");
   }
 
-  async function signUp(email: string, password: string, firstName: string, lastName: string) {
+  async function signUp(
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string
+  ) {
     isLoading.value = true;
     error.value = null;
-    message.value = '';
+    message.value = "";
     try {
       const response = await userApi.signUp({ email, password, firstName, lastName });
       const newUser: User = response.data;
       user.value = newUser;
       saveUserToStorage(newUser);
-      message.value = response.data.message || 'Account created successfully! Please verify your email.';
+      message.value =
+        response.data.message ||
+        "Account created successfully! Please verify your email.";
       return newUser;
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.response?.data?.error || err.message || 'Signup failed';
+      const msg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        "Signup failed";
       error.value = msg;
       throw new Error(msg);
     } finally {
@@ -79,7 +92,7 @@ export const useUserStore = defineStore('user', () => {
   async function login(email: string, password: string) {
     isLoading.value = true;
     error.value = null;
-    message.value = '';
+    message.value = "";
     status.value = false;
     try {
       const response = await userApi.login(email, password);
@@ -89,11 +102,15 @@ export const useUserStore = defineStore('user', () => {
       user.value = loggedInUser;
       saveUserToStorage(loggedInUser);
       saveSummariesToStorage();
-      message.value = response.data.message || 'Login successful!';
+      message.value = response.data.message || "Login successful!";
       status.value = response.data.status;
       return loggedInUser;
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.response?.data?.error || err.message || 'Login failed';
+      const msg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        "Login failed";
       error.value = msg;
       throw new Error(msg);
     } finally {
@@ -104,21 +121,26 @@ export const useUserStore = defineStore('user', () => {
   function logout() {
     user.value = null;
     clearUserFromStorage();
-    message.value = 'Logged out successfully.';
+    message.value = "Logged out successfully.";
   }
 
   async function refreshToken() {
-    if (!user.value?.tokens?.refreshToken) return { success: false, message: 'No refresh token available' };
+    if (!user.value?.tokens?.refreshToken)
+      return { success: false, message: "No refresh token available" };
     try {
       const response = await userApi.refreshToken(user.value.tokens.refreshToken);
       if (response.data.accessToken) {
         user.value.tokens.accessToken = response.data.accessToken;
         saveUserToStorage(user.value);
       }
-      message.value = response.data.message || 'Token refreshed successfully.';
+      message.value = response.data.message || "Token refreshed successfully.";
       return { success: true, message: message.value };
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.response?.data?.error || err.message || 'Token refresh failed';
+      const msg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        "Token refresh failed";
       error.value = msg;
       return { success: false, message: msg };
     }
@@ -127,12 +149,16 @@ export const useUserStore = defineStore('user', () => {
   async function resendVerificationCode(email: string) {
     isLoading.value = true;
     error.value = null;
-    message.value = '';
+    message.value = "";
     try {
       const response = await userApi.resendVerificationCode(email);
-      message.value = response.data.message || 'Verification code resent to your email!';
+      message.value = response.data.message || "Verification code resent to your email!";
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to resend verification code';
+      const msg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        "Failed to resend verification code";
       error.value = msg;
       throw new Error(msg);
     } finally {
@@ -143,12 +169,16 @@ export const useUserStore = defineStore('user', () => {
   async function verifyAccount(email: string, code: string) {
     isLoading.value = true;
     error.value = null;
-    message.value = '';
+    message.value = "";
     try {
       const response = await userApi.verifyAccount(email, code);
-      message.value = response.data.message || 'Account verified successfully!';
+      message.value = response.data.message || "Account verified successfully!";
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.response?.data?.error || err.message || 'Account verification failed';
+      const msg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        "Account verification failed";
       error.value = msg;
       throw new Error(msg);
     } finally {
@@ -159,13 +189,17 @@ export const useUserStore = defineStore('user', () => {
   async function forgotPassword(email: string) {
     isLoading.value = true;
     error.value = null;
-    message.value = '';
+    message.value = "";
     try {
       const response = await userApi.forgotPassword(email);
-      message.value = response.data.message || 'Password reset link sent to your email!';
+      message.value = response.data.message || "Password reset link sent to your email!";
       return { status: response.data.success, message: message.value };
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to send reset link';
+      const msg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        "Failed to send reset link";
       error.value = msg;
       return { status: false, message: msg };
     } finally {
@@ -176,13 +210,17 @@ export const useUserStore = defineStore('user', () => {
   async function resetPassword(email: string, code: string, newPassword: string) {
     isLoading.value = true;
     error.value = null;
-    message.value = '';
+    message.value = "";
     try {
       const response = await userApi.resetPassword(email, code, newPassword);
-      message.value = response.data.message || 'Password reset successfully!';
+      message.value = response.data.message || "Password reset successfully!";
       return { status: response.data.success, message: message.value };
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to reset password';
+      const msg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        "Failed to reset password";
       error.value = msg;
       return { status: false, message: msg };
     } finally {
@@ -193,10 +231,10 @@ export const useUserStore = defineStore('user', () => {
   async function getUserPhoto(userId: string): Promise<string> {
     try {
       const response = await userApi.getUserPhoto(userId);
-      return response.data.photoUrl || '';
+      return response.data.photoUrl || "";
     } catch (err) {
-      console.log('Photo not found:', err);
-      return '';
+      console.log("Photo not found:", err);
+      return "";
     }
   }
 
@@ -211,19 +249,22 @@ export const useUserStore = defineStore('user', () => {
       saveSummariesToStorage();
       return response.data.data;
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'Failed to fetch user details';
+      const msg =
+        err.response?.data?.message || err.message || "Failed to fetch user details";
       error.value = msg;
     } finally {
       isLoading.value = false;
     }
   }
 
-  async function updateProfile(payload: {
-    firstName: string;
-    lastName: string;
-    nickname?: string;
-    email: string;
-  }) {
+  async function updateProfile(
+    payload: Partial<{
+      firstName: string;
+      lastName: string;
+      nickname?: string;
+      email: string;
+    }>
+  ) {
     isLoading.value = true;
     error.value = null;
     try {
@@ -233,9 +274,11 @@ export const useUserStore = defineStore('user', () => {
         user.value = { ...user.value, ...response.data.user };
         saveUserToStorage(user.value);
       }
-      message.value = response.data.message || 'Profile updated successfully!';
+      message.value = response.data.message || "Profile updated successfully!";
+      await getUserDetails();
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'Failed to update profile';
+      const msg =
+        err.response?.data?.message || err.message || "Failed to update profile";
       error.value = msg;
       throw new Error(msg);
     } finally {
@@ -256,12 +299,13 @@ export const useUserStore = defineStore('user', () => {
         saveUserToStorage(user.value);
       }
 
-      message.value = response.data.message || 'Profile picture updated successfully!';
+      message.value = response.data.message || "Profile picture updated successfully!";
 
       // Return the ready-to-use URL so the component can update the preview
       return photoUrl;
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'Failed to upload profile picture';
+      const msg =
+        err.response?.data?.message || err.message || "Failed to upload profile picture";
       error.value = msg;
       throw new Error(msg);
     } finally {
@@ -274,9 +318,10 @@ export const useUserStore = defineStore('user', () => {
     error.value = null;
     try {
       const response = await userApi.changePassword(currentPassword, newPassword);
-      message.value = response.data.message || 'Password changed successfully!';
+      message.value = response.data.message || "Password changed successfully!";
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || 'Failed to change password';
+      const msg =
+        err.response?.data?.message || err.message || "Failed to change password";
       error.value = msg;
       throw new Error(msg);
     } finally {
@@ -285,14 +330,30 @@ export const useUserStore = defineStore('user', () => {
   }
 
   return {
-    user, isLoading, error, message, status, billsSummary, plansSummary,
+    user,
+    isLoading,
+    error,
+    message,
+    status,
+    billsSummary,
+    plansSummary,
     photoData,
     isAuthenticated,
-    initializeUser, saveUserToStorage, clearUserFromStorage,
-    signUp, login, logout, refreshToken,
-    resendVerificationCode, verifyAccount,
-    forgotPassword, resetPassword,
-    getUserPhoto, getUserDetails,
-    updateProfile, uploadProfilePicture, changePassword,
-};
+    initializeUser,
+    saveUserToStorage,
+    clearUserFromStorage,
+    signUp,
+    login,
+    logout,
+    refreshToken,
+    resendVerificationCode,
+    verifyAccount,
+    forgotPassword,
+    resetPassword,
+    getUserPhoto,
+    getUserDetails,
+    updateProfile,
+    uploadProfilePicture,
+    changePassword,
+  };
 });

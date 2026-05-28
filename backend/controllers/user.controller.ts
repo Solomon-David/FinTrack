@@ -357,12 +357,17 @@ export const updateProfile = async (req: UserRequest, res: Response): Promise<vo
     try {
         const userId = req.user!.userId;
         const { firstName, lastName, nickname, email } = req.body;
+    const updates: { [key: string]: any } = {};
 
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            { $set: { firstName, lastName, nickname, email } },
-            { new: true }
-        );
+    if (firstName !== undefined) updates.firstName = firstName;
+    if (lastName !== undefined) updates.lastName = lastName;
+    if (nickname !== undefined) updates.nickname = nickname;
+    if (email !== undefined) updates.email = email;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { $set: updates }
+    );
 
         if (!updatedUser) {
             res.status(404).json({ message: "User not found", success: false });

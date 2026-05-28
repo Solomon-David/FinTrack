@@ -37,13 +37,13 @@ export async function getUserDetails() {
   return axiosInstance.get('/users/user-details');
 }
 
-export async function updateProfile(payload: {
+export async function updateProfile(payload: Partial<{
   firstName: string;
   lastName: string;
   nickname?: string;
   email: string;
-}) {
-  return axiosInstance.put('/users/update-profile', payload);
+}>) {
+  return axiosInstance.patch('/users/update-profile', payload);
 }
 
 export async function uploadProfilePicture(file: File) {
@@ -55,5 +55,5 @@ export async function uploadProfilePicture(file: File) {
 }
 
 export async function changePassword(currentPassword: string, newPassword: string) {
-  return axiosInstance.put('/users/change-password', { currentPassword, newPassword });
+  return axiosInstance.patch('/users/change-password', { currentPassword, newPassword });
 }

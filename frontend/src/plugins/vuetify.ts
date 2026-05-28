@@ -12,7 +12,7 @@ const mainTheme: ThemeDefinition = {
     colors: {
         primary: "#EAB000",
         "primary-light": "#EDC458",
-        accent: "#141671",    
+        accent: "#141671",
         secondary: "#0e2270",
         "secondary-translucent": "#3E5CD4AA",
         "secondary-light": "#47A2F5",

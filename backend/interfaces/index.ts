@@ -1,7 +1,7 @@
 import mongoose, { Document } from "mongoose";
 import { Request } from "express";
 
- interface GenericDocument extends Document {
+interface GenericDocument extends Document {
     createdAt: Date;
     updatedAt: Date;
 }
@@ -17,7 +17,7 @@ export interface IUserModel extends GenericDocument {
     lastName: string;
     nickname?: string;
     email: string;
-    photoData?: string; 
+    photoData?: string;
     dob?: Date;
     lastSeen?: Date;
     preferredCurrency?: string;
@@ -26,28 +26,28 @@ export interface IUserModel extends GenericDocument {
     contacts?: Array<IContact>;
     verified: boolean;
     verificationCode?: string | null; //6 character code for email verification
-    verificationCodeExpires: number|null,
+    verificationCodeExpires: number | null,
     tokens: {
         accessToken: string;
         refreshToken: string;
     };
     passwordResetCode?: string | null; //6 character code for password reset
-    passwordResetCodeExpires: number|null,
+    passwordResetCodeExpires: number | null,
     comparePassword(password: string): Promise<boolean>;
     changePassword(oldPassword: string, newPassword: string): Promise<void>;
 }
 
- interface FinancialRecord extends GenericDocument {
+interface FinancialRecord extends GenericDocument {
     user: mongoose.Types.ObjectId;
     amount: number;
     currency: string;
     date: Date;
-    
+
 }
 
 
 export interface IIncome extends FinancialRecord {
-    sender: mongoose.Types.ObjectId;
+    sender: string;
     purpose?: string;
 }
 
@@ -55,14 +55,14 @@ export interface IExpense extends FinancialRecord {
     item: string;
     isBill: boolean;
     bill?: mongoose.Types.ObjectId; // Reference to Bill if isBill is true
-    vendor: IContact | null; 
-}   
+    vendor: IContact | null;
+}
 
 export interface IRCData extends GenericDocument {
     user: mongoose.Types.ObjectId;
     currency: string;
     date: Date;
-    sender: IContact;
+    sender: string;
     amount: IAirtime | IData;
     type: 'airtime' | 'data';
     network: "MTN" | "Airtel" | "Glo" | "9mobile";
@@ -115,7 +115,7 @@ export interface IDataRange {
     start: Date;
     end: Date;
 }
-    
+
 //interface for email
 export interface SendEmailDTO {
     to: string;
@@ -129,7 +129,7 @@ export interface IUser {
     lastName: string;
     nickname?: string;
     email: string;
-    photoData?: string; 
+    photoData?: string;
     dob?: Date;
     lastSeen: Date;
     preferredCurrency: string;

@@ -6,6 +6,7 @@ import { connectDB } from './config/db.ts';
 //routes
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
+import incomeRoutes from './routes/income.routes';
 
 // Load environment variables
 dotenv.config();
@@ -35,6 +36,7 @@ app.use((req, res, next) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/income", incomeRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req: Request, res: Response) => {

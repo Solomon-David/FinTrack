@@ -39,7 +39,7 @@
 
     <!-- yellow button for login -->
     <v-btn
-      class="text-bold text-h5 text-none bg-primary text-light py-5 mt-5"
+      class="text-bold text-button text-none bg-primary text-accent py-5 mt-5"
       variant="flat"
       rounded
       block
@@ -69,7 +69,7 @@ defineEmits({
 import { ref } from "vue";
 import { useUserStore } from "../../stores/users.stores";
 import { useRouter } from "vue-router";
-import ForgotPasswordDialog from "@/dialogs/ForgotPasswordDialog.vue";
+import ForgotPasswordDialog from "@/components/dialogs/ForgotPasswordDialog.vue";
 
 const router = useRouter();
 const userStore = useUserStore();

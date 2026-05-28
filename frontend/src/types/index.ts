@@ -16,6 +16,21 @@ export interface User {
     }
     isVerified: boolean;
     dob?: Date;
+    billsSummary?: Record<string, number>;
+    plansSummary?: Record<string, number>;
+}
+
+export interface IncomeEntry {
+    _id: string;
+    userId: string;
+    date: string | null;
+    amount: number | null;
+    sender: string;
+    purpose?: string;
+    currency?: {
+        type: string,
+        default: "NGN",
+    }
 }
 
 

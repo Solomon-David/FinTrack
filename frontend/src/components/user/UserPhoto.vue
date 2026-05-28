@@ -1,5 +1,5 @@
 <template>
-  <v-avatar :size="size" color="secondary">
+  <v-avatar :size="size" color="secondary" class="ma-0" :border="!borderless">
     <v-img v-if="userStore.photoData" :src="userStore.photoData" />
     <v-icon v-else :size="iconSize" color="white">mdi-account</v-icon>
   </v-avatar>
@@ -9,9 +9,13 @@
 import { computed } from "vue";
 import { useUserStore } from "@/stores/users.stores";
 
-const props = withDefaults(defineProps<{ size?: string | number }>(), {
-  size: "45",
-});
+const props = withDefaults(
+  defineProps<{ size?: string | number; borderless?: boolean }>(),
+  {
+    size: "45",
+    border: false,
+  }
+);
 
 const userStore = useUserStore();
 
