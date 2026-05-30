@@ -62,20 +62,20 @@ const routes = [
       {
         path: "/income",
         name: "income",
-        component: () => import("@views/user/Dashboard.vue"),
-        meta: { title: "home" },
+        component: () => import("@views/features/income/IncomeView.vue"),
+        meta: { title: "Income" },
       },
       {
         path: "/expenses",
         name: "expenses",
-        component: () => import("@views/user/Dashboard.vue"),
-        meta: { title: "home" },
+        component: () => import("@views/features/expenses/ExpensesView.vue"),
+        meta: { title: "Expenses" },
       },
       {
         path: "/rc-data",
         name: "rc-data",
-        component: () => import("@views/user/Dashboard.vue"),
-        meta: { title: "home" },
+        component: () => import("@views/features/rcdata/RCDataView.vue"),
+        meta: { title: "RC Data" },
       },
       {
         path: "/bills",

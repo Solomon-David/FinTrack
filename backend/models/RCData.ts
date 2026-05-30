@@ -9,7 +9,7 @@ const ContactSubSchema = new Schema(
   { _id: false }
 );
 
-const IRCDataSchema: Schema<IRCData> = new Schema(
+const RCDataSchema: Schema<IRCData> = new Schema(
   {
     user: { type: Schema.Types.ObjectId, ref: "User", required: true },
     currency: { type: String, required: true },
@@ -27,6 +27,6 @@ const IRCDataSchema: Schema<IRCData> = new Schema(
   { timestamps: true }
 );
 
-const IRCDataModel: Model<IRCData> = mongoose.models.IRCData || mongoose.model<IRCData>("IRCData", IRCDataSchema);
+const RCDataModel: Model<RCData> = mongoose.models.RCData || mongoose.model<RCData>("RCData", RCDataSchema);
 
-export default IRCDataModel;
+export default RCDataModel;

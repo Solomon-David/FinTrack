@@ -5,9 +5,10 @@
 
     <v-spacer></v-spacer>
 
-    <v-app-bar-title class="font-weight-bold text-h5 text-black text-center">{{
-      props.title
-    }}</v-app-bar-title>
+    <v-app-bar-title
+      class="font-weight-bold text-md-h5 text-xs-title font-weight-xs-medium text-black text-center"
+      >{{ props.title }}</v-app-bar-title
+    >
 
     <v-spacer></v-spacer>
 

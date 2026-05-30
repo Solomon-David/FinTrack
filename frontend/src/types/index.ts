@@ -33,4 +33,25 @@ export interface IncomeEntry {
     }
 }
 
+export interface ExpenseEntry {
+  date: string | null;
+  amount: number | null;
+  currency?: string;
+  item: string;
+  isBill?: boolean;
+  vendor?: string; // plain string — controller wraps it in { name }
+}
 
+export interface RCDataEntry {
+  date: string | null;
+  currency: string;
+  sender: { name: string; phone?: string };
+  amount: {
+    amount: number | null;
+    currency?: string;
+    size?: "GB" | "MB";
+  };
+  type: 'airtime' | 'data';
+  network: "MTN" | "Airtel" | "Glo" | "9mobile";
+  remark?: string;
+}

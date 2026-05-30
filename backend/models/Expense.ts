@@ -13,7 +13,7 @@ const ExpenseSchema: Schema<IExpense> = new Schema(
     isBill: { type: Boolean, default: false },
     bill: { type: Schema.Types.ObjectId, ref: "Bill" },
     vendor: {
-      name: { type: String, required: true },
+      name: { type: String },
       phone: { type: String },
     },
   },

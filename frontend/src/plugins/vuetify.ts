@@ -17,6 +17,7 @@ const mainTheme: ThemeDefinition = {
         "secondary-translucent": "#3E5CD4AA",
         "secondary-light": "#47A2F5",
         light: "#FAFAF0",
+        "grey-blue": "#d8d9db",
     }
 }
 

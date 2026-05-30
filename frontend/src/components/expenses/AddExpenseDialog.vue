@@ -4,9 +4,9 @@
       class="px-6 pb-5 pt-1 bg-light rounded-lg d-flex flex-column gap-3 overflow-y-auto"
     >
       <!-- Header -->
-      <DialogHeaderComponent title="Add Income" v-model="open" />
+      <DialogHeaderComponent title="Add Expense" v-model="open" />
       <v-form>
-        <!-- Income Forms -->
+        <!-- Expense Forms -->
         <div v-for="(entry, index) in entries" :key="index" class="d-flex flex-column">
           <div v-if="entries.length > 1" class="d-flex align-center ga-2 mb-2">
             <v-divider />
@@ -43,21 +43,29 @@
               </v-btn>
             </template>
           </v-text-field>
-          <!-- Sender Field -->
+
           <v-text-field
-            v-model="entry.sender"
+            v-model="entry.item"
             variant="outlined"
-            label="Sender"
+            label="Item"
             density="comfortable"
           />
           <v-text-field
-            v-model="entry.purpose"
+            v-model="entry.vendor"
             variant="outlined"
-            label="Purpose (optional)"
+            label="Vendor (optional)"
             density="comfortable"
+          />
+          <v-checkbox
+            v-model="entry.isBill"
+            label="This is a bill"
+            color="secondary"
+            density="comfortable"
+            hide-details
+            class="mb-2"
           />
 
-          <!-- Minus button — hidden on first entry if only one exists -->
+          <!-- Minus button — hidden when only one entry -->
           <div v-if="entries.length > 1" class="d-flex justify-center mb-2">
             <v-btn
               icon="mdi-minus"
@@ -114,9 +122,9 @@
 <script setup lang="ts">
 import { ref, reactive, watch } from "vue";
 import { useUserStore } from "@/stores/users.stores";
-import { useIncomeStore as IncomeStore } from "@/stores/income.store";
+import { useExpenseStore } from "@/stores/expense.store";
 import DialogHeaderComponent from "@/components/shared/DialogHeaderComponent.vue";
-import type { IncomeEntry } from "@/types";
+import type { ExpenseEntry } from "@/types";
 
 const snackbar = reactive({ show: false, message: "", color: "success" });
 
@@ -127,25 +135,26 @@ function showSnackbar(message: string, color: string) {
 }
 
 const props = defineProps<{
-  initialEntry?: Partial<IncomeEntry>;
+  initialEntry?: Partial<ExpenseEntry>;
 }>();
+
 const open = defineModel<boolean>({ required: true });
 const userStore = useUserStore();
-const incomeStore = IncomeStore();
+const expenseStore = useExpenseStore();
 const loading = ref(false);
 
-function createEntry(): IncomeEntry {
+function createEntry(): ExpenseEntry {
   return {
-    _id: "",
-    userId: userStore.user?.id || "",
     date: props.initialEntry?.date ?? new Date().toISOString().split("T")[0],
     amount: props.initialEntry?.amount ?? null,
-    sender: props.initialEntry?.sender ?? "",
-    purpose: props.initialEntry?.purpose ?? "",
+    item: props.initialEntry?.item ?? "",
+    vendor: props.initialEntry?.vendor ?? "",
+    isBill: props.initialEntry?.isBill ?? false,
+    currency: props.initialEntry?.currency ?? userStore.user?.preferredCurrency ?? "NGN",
   };
 }
 
-const entries = ref<IncomeEntry[]>([createEntry()]);
+const entries = ref<ExpenseEntry[]>([createEntry()]);
 
 function resetEntries() {
   entries.value = [createEntry()];
@@ -154,9 +163,7 @@ function resetEntries() {
 watch(
   () => [open.value, props.initialEntry],
   ([isOpen]) => {
-    if (isOpen) {
-      resetEntries();
-    }
+    if (isOpen) resetEntries();
   }
 );
 
@@ -173,11 +180,11 @@ function removeEntry(index: number) {
 async function submit() {
   loading.value = true;
   try {
-    await incomeStore.addIncome(entries.value);
+    await expenseStore.addExpense(entries.value);
     showSnackbar(
       entries.value.length > 1
-        ? `${entries.value.length} income records added successfully!`
-        : "Income added successfully!",
+        ? `${entries.value.length} expense records added successfully!`
+        : "Expense added successfully!",
       "success"
     );
     setTimeout(() => {
@@ -185,7 +192,7 @@ async function submit() {
       open.value = false;
     }, 1500);
   } catch (err: any) {
-    showSnackbar(err.message || "Failed to add income.", "error");
+    showSnackbar(err.message || "Failed to add expense.", "error");
   } finally {
     loading.value = false;
   }
