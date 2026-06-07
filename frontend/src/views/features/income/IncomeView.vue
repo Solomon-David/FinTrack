@@ -103,7 +103,7 @@ import type { Income } from "@/stores/income.store";
 import IncomeItem from "@/components/income/IncomeItem.vue";
 import SearchComponent from "@/components/shared/SearchComponent.vue";
 import IncomeEditDialog from "@/components/income/IncomeEditDialog.vue";
-import LoadingDialog from "@/components/dialogs/LoadingDialog.vue";
+import LoadingDialog from "@/components/shared/LoadingDialog.vue";
 
 const incomeStore = useIncomeStore();
 

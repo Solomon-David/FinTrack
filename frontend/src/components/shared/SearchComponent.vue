@@ -1,6 +1,6 @@
 <template>
   <div
-    class="d-flex align-center ga-2 px-none py-none mx-auto bg-grey-blue rounded-xl w-xs-25 w-sm-50 w-md-75"
+    class="d-flex align-center ga-2 px-none py-none mx-auto bg-grey-blue rounded-xl w-xs-50 w-md-75"
   >
     <!-- Filter dropdown -->
     <v-menu v-model="filterMenu" :close-on-content-click="false">

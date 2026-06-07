@@ -4,6 +4,7 @@
 
     <div class="px-4 d-flex flex-column" style="height: calc(100vh - 180px)">
       <div class="d-flex align-center justify-space-between mb-2">
+        <v-spacer />
         <h2 class="text-h6 font-weight-bold">Records</h2>
         <v-btn
           icon="mdi-refresh"
@@ -89,7 +90,7 @@ import type { Expense } from "@/stores/expense.store";
 import ExpenseItem from "@/components/expenses/ExpenseItem.vue";
 import SearchComponent from "@/components/shared/SearchComponent.vue";
 import ExpenseEditDialog from "@/components/expenses/ExpenseEditDialog.vue";
-import LoadingDialog from "@/components/dialogs/LoadingDialog.vue";
+import LoadingDialog from "@/components/shared/LoadingDialog.vue";
 
 const expenseStore = useExpenseStore();
 

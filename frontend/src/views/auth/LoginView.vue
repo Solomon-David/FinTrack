@@ -69,7 +69,7 @@ defineEmits({
 import { ref } from "vue";
 import { useUserStore } from "../../stores/users.stores";
 import { useRouter } from "vue-router";
-import ForgotPasswordDialog from "@/components/dialogs/ForgotPasswordDialog.vue";
+import ForgotPasswordDialog from "@/components/auth/ForgotPasswordDialog.vue";
 
 const router = useRouter();
 const userStore = useUserStore();

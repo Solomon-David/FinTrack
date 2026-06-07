@@ -1,15 +1,15 @@
 <template>
   <v-container
-    class="d-flex flex-column flex-sm-row flex-fill justify-xs-space-between align-center justify-sm-center"
+    class="d-flex flex-column flex-sm-row flex-fill justify-space-evenly align-center gap-sm-20 gap-10"
   >
     <!-- logo -->
     <v-card
-      class="w-md-50 d-flex flex-column gap-4 align-center justify-center mb-10 mb-sm-0"
+      class="d-flex flex-column gap-4 align-center justify-center mb-10 mb-sm-0"
       color="transparent"
       variant="flat"
     >
       <v-img
-        class="border-round w-50 w-sm-33"
+        class="border-round w-50 w-sm-100"
         cover
         src="/src/assets/logo_dark.png"
         alt="logo"
@@ -18,7 +18,7 @@
     </v-card>
 
     <!-- form -->
-    <v-card class="w-md-50 w-75 glass rounded-lg py-5" variant="flat">
+    <v-card class="w-sm-50 w-75 glass rounded-lg py-5" variant="flat">
       <router-view></router-view>
     </v-card>
   </v-container>

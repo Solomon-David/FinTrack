@@ -86,8 +86,8 @@ const routes = [
       {
         path: "/summaries",
         name: "summaries",
-        component: () => import("@views/user/Dashboard.vue"),
-        meta: { title: "home" },
+        component: () => import("@views/features/summaries/SummariesView.vue"),
+        meta: { title: "Summaries" },
       },
       {
         path: "/plans",

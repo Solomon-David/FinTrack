@@ -107,7 +107,7 @@
 import { ref, shallowRef, defineAsyncComponent } from "vue";
 import { useUserStore } from "@/stores/users.stores";
 import UserPhoto from "@/components/user/UserPhoto.vue";
-import LoadingDialog from "@/components/dialogs/LoadingDialog.vue";
+import LoadingDialog from "@/components/shared/LoadingDialog.vue";
 import { useDisplay } from "vuetify";
 
 const userStore = useUserStore();
@@ -142,7 +142,7 @@ const quickActions = [
     label: "Get Summary",
     icon: "mdi-trending-up",
     color: "#B71C1C",
-    component: () => import("@/components/income/AddIncomeDialog.vue"),
+    component: () => import("@/components/summaries/GenerateSummaryDialog.vue"),
   },
   {
     label: "Search Records",

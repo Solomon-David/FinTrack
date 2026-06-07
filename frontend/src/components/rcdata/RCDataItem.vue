@@ -10,7 +10,7 @@
       </template>
       <template #append>
         <div class="d-flex align-center ga-2">
-          <div class="d-flex flex-column align-end">
+          <div class="d-flex flex-column align-center">
             <span class="text-body-2 font-weight-bold">{{ record.sender.name }}</span>
             <v-chip size="x-small" :color="networkColor" label>{{
               record.network

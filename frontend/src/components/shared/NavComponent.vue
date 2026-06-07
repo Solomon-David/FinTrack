@@ -6,7 +6,8 @@
     <v-spacer></v-spacer>
 
     <v-app-bar-title
-      class="font-weight-bold text-md-h5 text-xs-title font-weight-xs-medium text-black text-center"
+      class="text-h6 text-sm-h5 font-weight-bold text-black text-center flex-grow-1"
+      style="white-space: normal"
       >{{ props.title }}</v-app-bar-title
     >
 

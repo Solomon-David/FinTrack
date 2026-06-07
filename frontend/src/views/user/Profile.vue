@@ -302,7 +302,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from "vue";
 import { useUserStore } from "@/stores/users.stores";
-import ChangePasswordDialog from "@/components/dialogs/ChangePasswordDialog.vue";
+import ChangePasswordDialog from "@/components/auth/ChangePasswordDialog.vue";
 
 const changePasswordDialog = ref(false);
 const userStore = useUserStore();

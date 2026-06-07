@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { connectDB } from './config/db.ts';
+import { connectDB } from './config/db';
 
 //routes
 import authRoutes from './routes/auth.routes';
@@ -9,6 +9,9 @@ import userRoutes from './routes/user.routes';
 import incomeRoutes from './routes/income.routes';
 import expenseRoutes from './routes/expense.routes';
 import rcdataRoutes from './routes/rcdata.routes';
+import summaryRoutes from './routes/summary.routes';
+
+import { startSummaryJob } from './utils/summaryCronJob';
 
 // Load environment variables
 dotenv.config();
@@ -41,6 +44,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/income", incomeRoutes);
 app.use("/api/expenses", expenseRoutes);
 app.use("/api/rcdata", rcdataRoutes);
+app.use("/api/summaries", summaryRoutes);
 // Health check endpoint
 app.get('/api/health', (req: Request, res: Response) => {
   res.status(200).json({
@@ -58,3 +62,6 @@ app.get('/', (req: Request, res: Response) => {
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT} at ${new Date().toISOString()}`);
 });
+
+// Start cron job
+startSummaryJob();
