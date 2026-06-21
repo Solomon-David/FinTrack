@@ -118,6 +118,7 @@ import { computed } from "vue";
 import { useUserStore } from "@/stores/users.stores";
 import { useRouter } from "vue-router";
 import Logo from "@/assets/logo_dark.png";
+import axiosInstance from "@/utils/axios";
 
 const props = defineProps<{ modelValue: boolean }>();
 const emit = defineEmits<{ "update:modelValue": [value: boolean] }>();
@@ -131,8 +132,14 @@ const userStore = useUserStore();
 const router = useRouter();
 
 async function handleLogout() {
-  userStore.logout();
-  router.push({ name: "login" });
+  try {
+    await axiosInstance.post("/users/logout");
+  } catch (err) {
+    console.error("Logout error:", err);
+  } finally {
+    userStore.logout();
+    router.push({ name: "login" });
+  }
 }
 </script>
 

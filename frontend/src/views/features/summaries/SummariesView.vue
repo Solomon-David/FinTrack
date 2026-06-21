@@ -18,13 +18,7 @@
       </div>
 
       <div class="overflow-y-auto flex-grow-1">
-        <SummaryItem
-          v-for="summary in filteredSummaries"
-          :key="summary._id"
-          :summary="summary"
-          @export="handleExport"
-          @delete="confirmDelete"
-        />
+        
 
         <div
           v-if="!summaryStore.isLoading && filteredSummaries.length === 0"
@@ -196,17 +190,5 @@ async function handleGenerate() {
   }
 }
 
-function handleExport(summary: Summary) {
-  console.log("Export:", summary);
-}
 
-function confirmDelete(summary: Summary) {
-  selectedSummary.value = summary;
-  deleteDialog.value = true;
-}
-
-async function handleDelete() {
-  deleteDialog.value = false;
-  selectedSummary.value = null;
-}
 </script>

@@ -87,7 +87,6 @@ import type { Summary } from "@/stores/summary.store";
 const props = defineProps<{ summary: Summary }>();
 const emit = defineEmits<{
   export: [summary: Summary];
-  delete: [summary: Summary];
 }>();
 
 function get(category: string) {

@@ -23,6 +23,7 @@
             :key="expense._id"
             :expense="expense"
             @edit="openEdit"
+            @duplicate="openDuplicate"
             @delete="confirmDelete"
           />
           <div class="text-center text-caption font-weight-bold py-1">
@@ -30,10 +31,7 @@
           </div>
         </div>
 
-        <div
-          v-if="!expenseStore.isLoading && filteredExpenses.length === 0"
-          class="text-center py-10"
-        >
+        <div v-if="!expenseStore.isLoading && filteredExpenses.length === 0" class="text-center py-10">
           <v-icon size="48" color="grey-lighten-1">mdi-cash-remove</v-icon>
           <p class="text-medium-emphasis mt-2">No expense records found</p>
         </div>
@@ -46,7 +44,6 @@
       </v-btn>
     </div>
 
-    <!-- Floating Action Button -->
     <v-btn
       icon="mdi-plus"
       color="primary"
@@ -57,8 +54,12 @@
       @click="openAddDialog"
     />
 
-    <!-- Add Expense Dialog — only mounted after first FAB click -->
-    <component :is="AddExpenseDialog" v-if="AddExpenseDialog" v-model="addDialog" />
+    <component
+      :is="AddExpenseDialog"
+      v-if="AddExpenseDialog"
+      v-model="addDialog"
+      :initial-entry="duplicateEntry"
+    />
 
     <ExpenseEditDialog v-model="editDialog" :expense="selectedExpense" @updated="load" />
 
@@ -84,9 +85,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, defineAsyncComponent, shallowRef } from "vue";
+import { ref, computed, onMounted, defineAsyncComponent, shallowRef, watch } from "vue";
 import { useExpenseStore } from "@/stores/expense.store";
 import type { Expense } from "@/stores/expense.store";
+import type { ExpenseEntry } from "@/types";
 import ExpenseItem from "@/components/expenses/ExpenseItem.vue";
 import SearchComponent from "@/components/shared/SearchComponent.vue";
 import ExpenseEditDialog from "@/components/expenses/ExpenseEditDialog.vue";
@@ -98,12 +100,12 @@ const addDialog = ref(false);
 const editDialog = ref(false);
 const deleteDialog = ref(false);
 const selectedExpense = ref<Expense | null>(null);
+const duplicateEntry = ref<Partial<ExpenseEntry> | undefined>(undefined);
 const searchQuery = ref("");
 const searchFilter = ref("Item");
 
 const filters = ["Item", "Vendor", "Amount", "Date"];
 
-// Lazy load AddExpenseDialog only when FAB is clicked
 const AddExpenseDialog = shallowRef<ReturnType<typeof defineAsyncComponent> | null>(null);
 
 function openAddDialog() {
@@ -114,8 +116,32 @@ function openAddDialog() {
       delay: 0,
     });
   }
+  duplicateEntry.value = undefined;
   addDialog.value = true;
 }
+
+function openDuplicate(expense: Expense) {
+  if (!AddExpenseDialog.value) {
+    AddExpenseDialog.value = defineAsyncComponent({
+      loader: () => import("@/components/expenses/AddExpenseDialog.vue"),
+      loadingComponent: LoadingDialog,
+      delay: 0,
+    });
+  }
+  duplicateEntry.value = {
+    date: new Date(expense.date).toISOString().split("T")[0],
+    amount: expense.amount,
+    item: expense.item,
+    vendor: expense.vendor?.name ?? "",
+    isBill: expense.isBill,
+    currency: expense.currency,
+  };
+  addDialog.value = true;
+}
+
+watch(addDialog, (isOpen) => {
+  if (!isOpen) duplicateEntry.value = undefined;
+});
 
 onMounted(() => load());
 
@@ -129,16 +155,12 @@ const filteredExpenses = computed(() => {
 
   return expenseStore.expenses.filter((expense) => {
     if (searchFilter.value === "Item") return expense.item.toLowerCase().includes(q);
-    if (searchFilter.value === "Vendor")
-      return expense.vendor?.name.toLowerCase().includes(q);
+    if (searchFilter.value === "Vendor") return expense.vendor?.name.toLowerCase().includes(q);
     if (searchFilter.value === "Amount") return String(expense.amount).includes(q);
     if (searchFilter.value === "Date") {
       const date = new Date(expense.date);
       const full = date.toLocaleDateString("en-GB");
-      const monthYear = `${String(date.getMonth() + 1).padStart(
-        2,
-        "0"
-      )}/${date.getFullYear()}`;
+      const monthYear = `${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
       return full.includes(q) || monthYear.includes(q);
     }
     return true;

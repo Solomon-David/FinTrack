@@ -23,11 +23,11 @@
             :key="record._id"
             :record="record"
             @edit="openEdit"
+            @duplicate="openDuplicate"
             @delete="confirmDelete"
-            @duplicate="handleDuplicate"
           />
           <div class="text-center text-caption font-weight-bold py-1">
-            {{ date }}
+            Total: {{ groupTotal(group) }}
           </div>
         </div>
 
@@ -46,7 +46,7 @@
         Summaries
       </v-btn>
     </div>
-    <!-- FAB -->
+
     <v-btn
       icon="mdi-plus"
       color="primary"
@@ -57,7 +57,12 @@
       @click="openAddDialog"
     />
 
-    <component :is="AddRCDataDialog" v-if="AddRCDataDialog" v-model="addDialog" />
+    <component
+      :is="AddRCDataDialog"
+      v-if="AddRCDataDialog"
+      v-model="addDialog"
+      :initial-entry="duplicateEntry"
+    />
 
     <RCDataEditDialog v-model="editDialog" :record="selectedRecord" @updated="load" />
 
@@ -83,9 +88,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, defineAsyncComponent, shallowRef } from "vue";
+import { ref, computed, onMounted, defineAsyncComponent, shallowRef, watch } from "vue";
 import { useRCDataStore } from "@/stores/rcdata.store";
 import type { RCData } from "@/stores/rcdata.store";
+import type { RCDataEntry } from "@/types";
 import RCDataItem from "@/components/rcdata/RCDataItem.vue";
 import RCDataEditDialog from "@/components/rcdata/RCDataEditDialog.vue";
 import SearchComponent from "@/components/shared/SearchComponent.vue";
@@ -97,6 +103,7 @@ const addDialog = ref(false);
 const editDialog = ref(false);
 const deleteDialog = ref(false);
 const selectedRecord = ref<RCData | null>(null);
+const duplicateEntry = ref<Partial<RCDataEntry> | undefined>(undefined);
 const searchQuery = ref("");
 const searchFilter = ref("Sender");
 
@@ -112,8 +119,33 @@ function openAddDialog() {
       delay: 0,
     });
   }
+  duplicateEntry.value = undefined;
   addDialog.value = true;
 }
+
+function openDuplicate(record: RCData) {
+  if (!AddRCDataDialog.value) {
+    AddRCDataDialog.value = defineAsyncComponent({
+      loader: () => import("@/components/rcdata/AddRCDataDialog.vue"),
+      loadingComponent: LoadingDialog,
+      delay: 0,
+    });
+  }
+  duplicateEntry.value = {
+    date: new Date(record.date).toISOString().split("T")[0],
+    currency: record.currency,
+    sender: { name: record.sender.name, phone: record.sender.phone },
+    amount: { ...record.amount },
+    type: record.type,
+    network: record.network,
+    remark: record.remark,
+  };
+  addDialog.value = true;
+}
+
+watch(addDialog, (isOpen) => {
+  if (!isOpen) duplicateEntry.value = undefined;
+});
 
 onMounted(() => load());
 
@@ -152,6 +184,24 @@ const groupedRecords = computed(() => {
   }, {} as Record<string, RCData[]>);
 });
 
+function groupTotal(group: RCData[]) {
+  const airtime = group
+    .filter((r) => r.type === "airtime")
+    .reduce((sum, r) => sum + r.amount.amount, 0);
+  const dataMB = group
+    .filter((r) => r.type === "data")
+    .reduce(
+      (sum, r) =>
+        sum + (r.amount.size === "GB" ? r.amount.amount * 1024 : r.amount.amount),
+      0
+    );
+  const dataGB = (dataMB / 1024).toFixed(1);
+  const parts = [];
+  if (airtime > 0) parts.push(`₦${airtime.toLocaleString("en-NG")}`);
+  if (dataMB > 0) parts.push(`${dataGB}GB`);
+  return parts.length > 0 ? parts.join(", ") : "—";
+}
+
 function handleSearch(query: string, filter: string) {
   searchQuery.value = query;
   searchFilter.value = filter;
@@ -165,11 +215,6 @@ function openEdit(record: RCData) {
 function confirmDelete(record: RCData) {
   selectedRecord.value = record;
   deleteDialog.value = true;
-}
-
-function handleDuplicate(record: RCData) {
-  // TODO: open add dialog pre-filled with record data
-  console.log("Duplicate:", record);
 }
 
 async function handleDelete() {

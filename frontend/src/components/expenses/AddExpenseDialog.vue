@@ -19,6 +19,13 @@
             type="date"
             density="comfortable"
           />
+
+          <v-text-field
+            v-model="entry.item"
+            variant="outlined"
+            label="Item"
+            density="comfortable"
+          />
           <v-text-field
             v-model="entry.amount"
             variant="outlined"
@@ -43,13 +50,6 @@
               </v-btn>
             </template>
           </v-text-field>
-
-          <v-text-field
-            v-model="entry.item"
-            variant="outlined"
-            label="Item"
-            density="comfortable"
-          />
           <v-text-field
             v-model="entry.vendor"
             variant="outlined"
@@ -58,12 +58,47 @@
           />
           <v-checkbox
             v-model="entry.isBill"
-            label="This is a bill"
+            label="This is a bill payment"
             color="secondary"
             density="comfortable"
             hide-details
             class="mb-2"
+            @update:model-value="onBillToggle(entry)"
           />
+
+          <template v-if="entry.isBill">
+            <v-select
+              v-model="entry.billTypeId"
+              :items="billTypeStore.billTypes"
+              item-title="name"
+              item-value="_id"
+              label="Bill"
+              variant="outlined"
+              density="comfortable"
+              @update:model-value="onBillTypeSelected(entry)"
+            >
+              <template #item="{ props: itemProps, item }">
+                <v-list-item
+                  v-bind="itemProps"
+                  :subtitle="`₦${item.raw.amountPaid}/₦${item.raw.total} • ${item.raw.status}`"
+                />
+              </template>
+            </v-select>
+
+            <div
+              v-if="selectedBillType(entry)"
+              class="text-caption text-medium-emphasis mb-2"
+            >
+              Remaining: ₦{{ (selectedBillType(entry)!.total - selectedBillType(entry)!.amountPaid).toLocaleString('en-NG') }}
+            </div>
+
+            <v-text-field
+              v-model="entry.billPaymentRemark"
+              variant="outlined"
+              label="Payment Remark (optional)"
+              density="comfortable"
+            />
+          </template>
 
           <!-- Minus button — hidden when only one entry -->
           <div v-if="entries.length > 1" class="d-flex justify-center mb-2">
@@ -120,11 +155,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch } from "vue";
+import { onMounted, ref, reactive, watch } from "vue";
 import { useUserStore } from "@/stores/users.stores";
 import { useExpenseStore } from "@/stores/expense.store";
 import DialogHeaderComponent from "@/components/shared/DialogHeaderComponent.vue";
 import type { ExpenseEntry } from "@/types";
+import { useBillTypeStore } from "@/stores/billtype.store";
 
 const snackbar = reactive({ show: false, message: "", color: "success" });
 
@@ -142,6 +178,9 @@ const open = defineModel<boolean>({ required: true });
 const userStore = useUserStore();
 const expenseStore = useExpenseStore();
 const loading = ref(false);
+const billTypes = ["Electricity", "Accommodation", "Subscription", "Insurance", "Other"];
+const billStatuses = ["Paid", "Part", "Unpaid", "Overdue"];
+const billRecurrences = ["One-time", "Daily", "Weekly", "Monthly", "Yearly"];
 
 function createEntry(): ExpenseEntry {
   return {
@@ -151,6 +190,8 @@ function createEntry(): ExpenseEntry {
     vendor: props.initialEntry?.vendor ?? "",
     isBill: props.initialEntry?.isBill ?? false,
     currency: props.initialEntry?.currency ?? userStore.user?.preferredCurrency ?? "NGN",
+    billTypeId: props.initialEntry?.billTypeId,
+    billPaymentRemark: props.initialEntry?.billPaymentRemark ?? "",
   };
 }
 
@@ -174,6 +215,34 @@ function addEntry() {
 function removeEntry(index: number) {
   if (entries.value.length > 1) {
     entries.value.splice(index, 1);
+  }
+}
+
+//setting bill type when selected
+
+const billTypeStore = useBillTypeStore();
+
+onMounted(() => {
+  if (billTypeStore.billTypes.length === 0) billTypeStore.getBillTypes();
+});
+
+function selectedBillType(entry: ExpenseEntry) {
+  return billTypeStore.billTypes.find((b) => b._id === entry.billTypeId);
+}
+
+function onBillToggle(entry: ExpenseEntry) {
+  if (!entry.isBill) {
+    entry.billTypeId = undefined;
+    entry.billPaymentRemark = "";
+  }
+}
+
+function onBillTypeSelected(entry: ExpenseEntry) {
+  const bt = selectedBillType(entry);
+  if (bt) {
+    entry.item = bt.name;
+    // Suggest the remaining amount, user can edit for a partial payment
+    entry.amount = bt.total - bt.amountPaid;
   }
 }
 

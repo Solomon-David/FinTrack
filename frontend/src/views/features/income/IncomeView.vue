@@ -61,17 +61,17 @@
       elevation="4"
       rounded="lg"
       style="position: fixed; bottom: 25vh; right: 16px;"
-      @click="openAddDialog"
+      @click="openAddDialog()"
     />
 
-    <!-- Add Income Dialog — only mounted after first FAB click -->
+    <!-- Add Income Dialog -->
     <component
       :is="AddIncomeDialog"
       v-if="AddIncomeDialog"
       v-model="addDialog"
+      :initial-entry="duplicateEntry"
     />
 
-    <!-- Add alongside AddIncomeDialog -->
     <IncomeEditDialog v-model="editDialog" :income="selectedIncome" @updated="load" />
 
     <!-- Delete Confirmation -->
@@ -97,9 +97,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, defineAsyncComponent, shallowRef } from "vue";
+import { ref, computed, onMounted, defineAsyncComponent, shallowRef, watch } from "vue";
 import { useIncomeStore } from "@/stores/income.store";
 import type { Income } from "@/stores/income.store";
+import type { IncomeEntry } from "@/types";
 import IncomeItem from "@/components/income/IncomeItem.vue";
 import SearchComponent from "@/components/shared/SearchComponent.vue";
 import IncomeEditDialog from "@/components/income/IncomeEditDialog.vue";
@@ -111,12 +112,12 @@ const addDialog = ref(false);
 const editDialog = ref(false);
 const deleteDialog = ref(false);
 const selectedIncome = ref<Income | null>(null);
+const duplicateEntry = ref<Partial<IncomeEntry> | undefined>(undefined);
 const searchQuery = ref("");
 const searchFilter = ref("Sender");
 
 const filters = ["Sender", "Purpose", "Amount", "Date"];
 
-// Lazy load AddIncomeDialog only when FAB is clicked
 const AddIncomeDialog = shallowRef<ReturnType<typeof defineAsyncComponent> | null>(null);
 
 function openAddDialog() {
@@ -127,8 +128,31 @@ function openAddDialog() {
       delay: 0,
     });
   }
+  duplicateEntry.value = undefined;
   addDialog.value = true;
 }
+
+function openDuplicate(income: Income) {
+  if (!AddIncomeDialog.value) {
+    AddIncomeDialog.value = defineAsyncComponent({
+      loader: () => import("@/components/income/AddIncomeDialog.vue"),
+      loadingComponent: LoadingDialog,
+      delay: 0,
+    });
+  }
+  duplicateEntry.value = {
+    date: new Date(income.date).toISOString().split("T")[0],
+    amount: income.amount,
+    sender: income.sender,
+    purpose: income.purpose ?? "",
+  };
+  addDialog.value = true;
+}
+
+// Clear duplicate entry when dialog closes
+watch(addDialog, (isOpen) => {
+  if (!isOpen) duplicateEntry.value = undefined;
+});
 
 onMounted(() => load());
 

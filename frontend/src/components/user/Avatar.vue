@@ -44,13 +44,21 @@ import { ref } from "vue";
 import { useUserStore } from "../../stores/users.stores";
 import { useRouter } from "vue-router";
 import UserPhoto from "./UserPhoto.vue";
+import axiosInstance from "@/utils/axios";
 
 const userStore = useUserStore();
 const router = useRouter();
 const menu = ref(false);
 
 async function handleLogout() {
-  await userStore.logout();
-  router.push({ name: "login" });
+  try {
+    await axiosInstance.post("/users/logout");
+  } catch (err) {
+    console.error("Logout error:", err);
+  } finally {
+    // Always clear local state regardless of backend response
+    userStore.logout();
+    router.push({ name: "login" });
+  }
 }
 </script>

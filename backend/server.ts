@@ -10,6 +10,8 @@ import incomeRoutes from './routes/income.routes';
 import expenseRoutes from './routes/expense.routes';
 import rcdataRoutes from './routes/rcdata.routes';
 import summaryRoutes from './routes/summary.routes';
+import billRoutes from './routes/bill.routes';
+import billTypeRoutes from "./routes/billtypes.routes";
 
 import { startSummaryJob } from './utils/summaryCronJob';
 
@@ -45,6 +47,8 @@ app.use("/api/income", incomeRoutes);
 app.use("/api/expenses", expenseRoutes);
 app.use("/api/rcdata", rcdataRoutes);
 app.use("/api/summaries", summaryRoutes);
+app.use("/api/bills", billRoutes);
+app.use("/api/bill-types", billTypeRoutes);
 // Health check endpoint
 app.get('/api/health', (req: Request, res: Response) => {
   res.status(200).json({

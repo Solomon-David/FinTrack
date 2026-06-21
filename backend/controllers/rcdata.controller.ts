@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { UserRequest } from '../interfaces';
 import RCData from '../models/RCData';
+import { touchSummariesForDate } from '../utils/summaryInvalidation';
 
 export const addRCData = async (req: UserRequest, res: Response): Promise<void> => {
     try {
@@ -33,6 +34,10 @@ export const addRCData = async (req: UserRequest, res: Response): Promise<void> 
 
         const saved = await RCData.insertMany(records);
 
+        for (const record of saved) {
+            await touchSummariesForDate(userId, record.date);
+        }
+
         res.status(201).json({
             success: true,
             message: `${saved.length} RC-Data record(s) added successfully`,
@@ -61,15 +66,29 @@ export const updateRCData = async (req: UserRequest, res: Response): Promise<voi
         const { id } = req.params;
         const { date, currency, sender, amount, type, network, remark } = req.body;
 
+        const existing = await RCData.findOne({ _id: id, user: userId });
+        if (!existing) {
+            res.status(404).json({ message: "RC-Data record not found", success: false });
+            return;
+        }
+
+        const oldDate = existing.date;
+        const newDate = date ? new Date(date) : existing.date;
+
         const updated = await RCData.findOneAndUpdate(
             { _id: id, user: userId },
-            { $set: { date, currency, sender, amount, type, network, remark } },
+            { $set: { date: newDate, currency, sender, amount, type, network, remark } },
             { new: true }
         );
 
         if (!updated) {
             res.status(404).json({ message: "RC-Data record not found", success: false });
             return;
+        }
+
+        await touchSummariesForDate(userId, oldDate);
+        if (newDate.getTime() !== oldDate.getTime()) {
+            await touchSummariesForDate(userId, newDate);
         }
 
         res.status(200).json({ success: true, message: "RC-Data updated successfully", data: updated });
@@ -90,6 +109,8 @@ export const deleteRCData = async (req: UserRequest, res: Response): Promise<voi
             res.status(404).json({ message: "RC-Data record not found", success: false });
             return;
         }
+
+        await touchSummariesForDate(userId, deleted.date);
 
         res.status(200).json({ success: true, message: "RC-Data deleted successfully" });
     } catch (error: any) {

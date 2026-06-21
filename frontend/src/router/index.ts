@@ -80,8 +80,8 @@ const routes = [
       {
         path: "/bills",
         name: "bills",
-        component: () => import("@views/user/Dashboard.vue"),
-        meta: { title: "home" },
+        component: () => import("@views/features/bills/billsView.vue"),
+        meta: { title: "Bills" },
       },
       {
         path: "/summaries",
