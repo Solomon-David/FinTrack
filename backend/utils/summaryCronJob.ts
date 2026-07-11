@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import User from '../models/User';
-import Bill from '../models/Bill';
+import BillType from '../models/BillType';
 import { generateSummaryForUser } from '../controllers/summary.controller';
 import { computeNextDueDate } from './computeDueDate';
 
@@ -21,33 +21,32 @@ const runSummaryJob = async (label: string) => {
     }
 };
 
-// Marks Unpaid bills as Overdue once their dueDate has passed,
-// and rolls recurring bills forward to their next due date.
 const runBillStatusJob = async (label: string) => {
     console.log(`[${new Date().toISOString()}] ${label} bill status job running...`);
     try {
         const now = new Date();
 
-        // Mark overdue
-        const overdueResult = await Bill.updateMany(
+        // Mark overdue — only BillTypes with unpaid/part status past their due date
+        const overdueResult = await BillType.updateMany(
             { status: { $in: ["Unpaid", "Part"] }, dueDate: { $lt: now } },
             { $set: { status: "Overdue" } }
         );
-        console.log(`${label}: marked ${overdueResult.modifiedCount} bill(s) as Overdue`);
+        console.log(`${label}: marked ${overdueResult.modifiedCount} bill type(s) as Overdue`);
 
-        // Roll recurring bills forward once their due date has passed
-        const recurringDue = await Bill.find({
+        // Roll recurring bill types forward when their due date has passed and they are paid
+        const paidRecurring = await BillType.find({
             recurrence: { $ne: "One-time" },
+            status: "Paid",
             dueDate: { $lt: now },
         });
 
-        for (const bill of recurringDue) {
-            const nextDue = computeNextDueDate(bill.recurrence, bill.dueEvery, bill.dueDate ?? now);
-            bill.dueDate = nextDue;
-            bill.status = "Unpaid"; // reset for the new cycle
+        for (const bill of paidRecurring) {
+            bill.amountPaid = 0;
+            bill.dueDate = computeNextDueDate(bill.recurrence, bill.dueEvery, bill.dueDate ?? now);
+            // pre-save hook resets status to Unpaid since amountPaid is now 0
             await bill.save();
         }
-        console.log(`${label}: rolled forward ${recurringDue.length} recurring bill(s)`);
+        console.log(`${label}: rolled forward ${paidRecurring.length} paid recurring bill type(s)`);
 
     } catch (error) {
         console.error(`${label} bill status job failed:`, error);
@@ -55,29 +54,10 @@ const runBillStatusJob = async (label: string) => {
 };
 
 export const startSummaryJob = () => {
-    // Daily — midnight every day
-    cron.schedule('0 0 * * *', () => {
-        runSummaryJob('Daily');
-        runBillStatusJob('Daily');
-    });
-
-    // Weekly — midnight every Monday
-    cron.schedule('0 0 * * 1', () => {
-        runSummaryJob('Weekly');
-        runBillStatusJob('Weekly');
-    });
-
-    // Monthly — midnight on the 1st of every month
-    cron.schedule('0 0 1 * *', () => {
-        runSummaryJob('Monthly');
-        runBillStatusJob('Monthly');
-    });
-
-    // Yearly — midnight on Jan 1st
-    cron.schedule('0 0 1 1 *', () => {
-        runSummaryJob('Yearly');
-        runBillStatusJob('Yearly');
-    });
+    cron.schedule('0 0 * * *', () => { runSummaryJob('Daily'); runBillStatusJob('Daily'); });
+    cron.schedule('0 0 * * 1', () => { runSummaryJob('Weekly'); runBillStatusJob('Weekly'); });
+    cron.schedule('0 0 1 * *', () => { runSummaryJob('Monthly'); runBillStatusJob('Monthly'); });
+    cron.schedule('0 0 1 1 *', () => { runSummaryJob('Yearly'); runBillStatusJob('Yearly'); });
 
     console.log('Summary & bill status cron jobs scheduled: Daily | Weekly | Monthly | Yearly');
 };

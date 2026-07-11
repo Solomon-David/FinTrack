@@ -17,7 +17,7 @@ export const useUserStore = defineStore("user", () => {
     () => !!user.value && !!user.value.tokens?.accessToken
   );
 
-  function initializeUser(): boolean {
+  async function initializeUser(): Promise<boolean> {
     try {
       const storedUser = localStorage.getItem("user");
       const storedToken = localStorage.getItem("token");
@@ -29,6 +29,15 @@ export const useUserStore = defineStore("user", () => {
           const storedPlans = localStorage.getItem("plansSummary");
           if (storedBills) billsSummary.value = JSON.parse(storedBills);
           if (storedPlans) plansSummary.value = JSON.parse(storedPlans);
+
+          if (navigator.onLine) {
+            try {
+              await getUserDetails();
+            } catch (err: any) {
+              console.warn("Could not refresh user details from backend:", err);
+            }
+          }
+
           return true;
         }
       }

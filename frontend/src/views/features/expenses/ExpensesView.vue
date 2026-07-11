@@ -1,8 +1,8 @@
 <template>
-  <v-container fluid class="pa-0">
+  <v-container fluid class="py-0">
     <SearchComponent :filters="filters" :on-search-fn="handleSearch" />
 
-    <div class="px-4 d-flex flex-column" style="height: calc(100vh - 180px)">
+    <div class="px-4 d-flex flex-column" style="height: 50vh">
       <div class="d-flex align-center justify-space-between mb-2">
         <v-spacer />
         <h2 class="text-h6 font-weight-bold">Records</h2>
@@ -16,7 +16,7 @@
         />
       </div>
 
-      <div class="overflow-y-auto flex-grow-1">
+      <div ref="listContainer" class="overflow-y-auto flex-grow-1">
         <div v-for="(group, date) in groupedExpenses" :key="date" class="mb-4">
           <ExpenseItem
             v-for="expense in group"
@@ -31,7 +31,10 @@
           </div>
         </div>
 
-        <div v-if="!expenseStore.isLoading && filteredExpenses.length === 0" class="text-center py-10">
+        <div
+          v-if="!expenseStore.isLoading && filteredExpenses.length === 0"
+          class="text-center py-10"
+        >
           <v-icon size="48" color="grey-lighten-1">mdi-cash-remove</v-icon>
           <p class="text-medium-emphasis mt-2">No expense records found</p>
         </div>
@@ -85,7 +88,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, defineAsyncComponent, shallowRef, watch } from "vue";
+import {
+  ref,
+  computed,
+  onMounted,
+  defineAsyncComponent,
+  shallowRef,
+  watch,
+  nextTick,
+} from "vue";
 import { useExpenseStore } from "@/stores/expense.store";
 import type { Expense } from "@/stores/expense.store";
 import type { ExpenseEntry } from "@/types";
@@ -155,12 +166,16 @@ const filteredExpenses = computed(() => {
 
   return expenseStore.expenses.filter((expense) => {
     if (searchFilter.value === "Item") return expense.item.toLowerCase().includes(q);
-    if (searchFilter.value === "Vendor") return expense.vendor?.name.toLowerCase().includes(q);
+    if (searchFilter.value === "Vendor")
+      return expense.vendor?.name.toLowerCase().includes(q);
     if (searchFilter.value === "Amount") return String(expense.amount).includes(q);
     if (searchFilter.value === "Date") {
       const date = new Date(expense.date);
       const full = date.toLocaleDateString("en-GB");
-      const monthYear = `${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
+      const monthYear = `${String(date.getMonth() + 1).padStart(
+        2,
+        "0"
+      )}/${date.getFullYear()}`;
       return full.includes(q) || monthYear.includes(q);
     }
     return true;
@@ -201,4 +216,26 @@ async function handleDelete() {
   deleteDialog.value = false;
   selectedExpense.value = null;
 }
+
+const listContainer = ref<HTMLElement | null>(null);
+
+function scrollToEnd() {
+  nextTick(() => {
+    const el = listContainer.value;
+    if (el) el.scrollTop = el.scrollHeight;
+  });
+}
+
+// to automatically scroll to the end
+watch(
+  filteredExpenses,
+  () => {
+    scrollToEnd();
+  },
+  { deep: true }
+);
+
+onMounted(() => {
+  load().then(scrollToEnd);
+});
 </script>

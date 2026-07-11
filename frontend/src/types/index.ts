@@ -63,9 +63,15 @@ export interface RCDataEntry {
 export interface BillEntry {
   date: string | null;
   amount: number | null; // amount paid
-  total: number | null;  // total owed
+  total: number | null; // total owed
   currency?: string;
-  type: "Electricity" | "Accommodation" | "Subscription" | "Insurance" | "Other";
+  type:
+    | "Electricity"
+    | "Accommodation"
+    | "Subscription"
+    | "Insurance"
+    | "Utility"
+    | "Other";
   name: string;
   status?: "Paid" | "Part" | "Unpaid" | "Overdue"; // optional override only
   recurrence: "One-time" | "Daily" | "Weekly" | "Monthly" | "Yearly";

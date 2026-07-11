@@ -1,6 +1,6 @@
 <template>
   <MenuDrawerComponent v-model="openMenu" />
-  <v-app-bar height="100" class="text-secondary px-2 pt-2" elevation="0" align="start">
+  <v-app-bar height="100" class="text-secondary px-2 py-0" elevation="0" align="start">
     <v-app-bar-nav-icon class="text-h5" @click="openMenu = !openMenu" />
 
     <v-spacer></v-spacer>

@@ -49,10 +49,10 @@
           <span
             class="font-weight-bold"
             :class="
-              userStore.billsSummary?.paid < userStore.billsSummary?.total ||
-              userStore.billsSummary?.total == 0
-                ? 'text-error'
-                : 'text-success'
+              userStore.billsSummary?.paid === userStore.billsSummary?.total &&
+              userStore.billsSummary?.total > 0
+                ? 'text-success'
+                : 'text-error'
             "
             >{{ userStore.billsSummary?.paid ?? 0 }}</span
           >
@@ -104,7 +104,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, shallowRef, defineAsyncComponent } from "vue";
+import { ref, shallowRef, defineAsyncComponent, onMounted, onActivated } from "vue";
 import { useUserStore } from "@/stores/users.stores";
 import UserPhoto from "@/components/user/UserPhoto.vue";
 import LoadingDialog from "@/components/shared/LoadingDialog.vue";
@@ -112,6 +112,19 @@ import { useDisplay } from "vuetify";
 
 const userStore = useUserStore();
 const display = useDisplay();
+
+const refreshDashboardUserDetails = async () => {
+  if (navigator.onLine) {
+    try {
+      await userStore.getUserDetails();
+    } catch (error) {
+      console.warn("Dashboard refresh failed:", error);
+    }
+  }
+};
+
+onMounted(refreshDashboardUserDetails);
+onActivated(refreshDashboardUserDetails);
 
 const quickActions = [
   {

@@ -1,9 +1,7 @@
 <template>
   <v-dialog v-model="open" class="w-xs-75 w-sm-66" scrim="true">
-    <v-container
-      class="px-6 pb-5 pt-1 bg-light rounded-lg d-flex flex-column gap-3 overflow-y-auto"
-    >
-      <DialogHeaderComponent title="Edit Bill" v-model="open" />
+    <v-container class="px-6 pb-5 pt-1 bg-light rounded-lg d-flex flex-column gap-3">
+      <DialogHeaderComponent title="Edit Bill Type" v-model="open" />
 
       <v-form ref="formRef">
         <v-text-field
@@ -25,9 +23,9 @@
         />
 
         <v-text-field
-          v-model="form.amount"
+          v-model="form.total"
           variant="outlined"
-          label="Amount (₦)"
+          label="Total Owed Per Cycle (₦)"
           type="number"
           density="comfortable"
           color="secondary"
@@ -40,44 +38,12 @@
               color="secondary"
               rounded="lg"
               class="text-caption font-weight-bold"
-              @click="form.amount = form.amount ? Number(form.amount) * 1000 : 1000"
+              @click="form.total = form.total ? Number(form.total) * 1000 : 1000"
             >
               000
             </v-btn>
           </template>
         </v-text-field>
-
-        <v-text-field
-          v-model="form.total"
-          variant="outlined"
-          label="Total Owed (₦)"
-          type="number"
-          density="comfortable"
-          color="secondary"
-          :rules="[required]"
-        />
-        <v-row dense>
-          <v-col cols="6">
-            <v-text-field
-              v-model="form.date"
-              variant="outlined"
-              label="Date"
-              type="date"
-              density="comfortable"
-              color="secondary"
-            />
-          </v-col>
-          <v-col cols="6">
-            <v-text-field
-              v-model="form.dueDate"
-              variant="outlined"
-              label="Due Date (optional)"
-              type="date"
-              density="comfortable"
-              color="secondary"
-            />
-          </v-col>
-        </v-row>
 
         <v-select
           v-model="form.recurrence"
@@ -88,10 +54,58 @@
           color="secondary"
         />
 
+        <v-row dense v-if="form.recurrence !== 'One-time' && form.recurrence !== 'Daily'">
+          <v-col cols="12">
+            <v-select
+              v-if="form.recurrence === 'Weekly'"
+              v-model="form.dueEvery"
+              :items="weekDays"
+              item-title="label"
+              item-value="value"
+              label="Due Every"
+              variant="outlined"
+              density="comfortable"
+              color="secondary"
+            />
+            <v-text-field
+              v-else-if="form.recurrence === 'Monthly'"
+              v-model.number="form.dueEvery"
+              type="number"
+              min="1"
+              max="31"
+              label="Due Every (Day of Month)"
+              variant="outlined"
+              density="comfortable"
+              color="secondary"
+            />
+            <v-select
+              v-else-if="form.recurrence === 'Yearly'"
+              v-model="form.dueEvery"
+              :items="months"
+              item-title="label"
+              item-value="value"
+              label="Due Every (Month)"
+              variant="outlined"
+              density="comfortable"
+              color="secondary"
+            />
+          </v-col>
+        </v-row>
+
+        <!-- Manual overdue toggle -->
+        <v-checkbox
+          v-model="form.markOverdue"
+          label="Manually mark as Overdue"
+          color="error"
+          density="comfortable"
+          hide-details
+          class="mb-2"
+        />
+
         <v-text-field
           v-model="form.remark"
           variant="outlined"
-          label="Remark"
+          label="Remark (optional)"
           density="comfortable"
           color="secondary"
         />
@@ -99,15 +113,7 @@
 
       <v-row dense>
         <v-col cols="6">
-          <v-btn
-            variant="tonal"
-            color="error"
-            block
-            rounded="lg"
-            height="44"
-            class="text-none"
-            @click="open = false"
-          >
+          <v-btn variant="tonal" color="error" block rounded="lg" height="44" class="text-none" @click="open = false">
             Cancel
           </v-btn>
         </v-col>
@@ -119,7 +125,7 @@
             rounded="lg"
             height="44"
             class="font-weight-bold text-none"
-            :loading="billStore.isLoading"
+            :loading="billTypeStore.isLoading"
             @click="submit"
           >
             Save
@@ -136,44 +142,40 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch } from "vue";
-import { useBillStore } from "@/stores/bill.store";
-import type { Bill } from "@/stores/bill.store";
+import { useBillTypeStore } from "@/stores/billtype.store";
+import type { BillType } from "@/stores/billtype.store";
 import DialogHeaderComponent from "@/components/shared/DialogHeaderComponent.vue";
 
 const open = defineModel<boolean>({ required: true });
-const props = defineProps<{ bill: Bill | null }>();
+const props = defineProps<{ bill: BillType | null }>();
 const emit = defineEmits<{ updated: [] }>();
 
-const billStore = useBillStore();
+const billTypeStore = useBillTypeStore();
 const formRef = ref();
 
-const types = [
-  "Electricity",
-  "Accommodation",
-  "Subscription",
-  "Insurance",
-  "Utility",
-  "Other",
-];
-const statuses = ["Paid", "Part", "Unpaid", "Overdue"];
+const types = ["Electricity", "Accommodation", "Subscription", "Insurance", "Other"];
 const recurrences = ["One-time", "Daily", "Weekly", "Monthly", "Yearly"];
+const weekDays = [
+  { label: "Sunday", value: 0 }, { label: "Monday", value: 1 }, { label: "Tuesday", value: 2 },
+  { label: "Wednesday", value: 3 }, { label: "Thursday", value: 4 }, { label: "Friday", value: 5 },
+  { label: "Saturday", value: 6 },
+];
+const months = [
+  { label: "January", value: 1 }, { label: "February", value: 2 }, { label: "March", value: 3 },
+  { label: "April", value: 4 }, { label: "May", value: 5 }, { label: "June", value: 6 },
+  { label: "July", value: 7 }, { label: "August", value: 8 }, { label: "September", value: 9 },
+  { label: "October", value: 10 }, { label: "November", value: 11 }, { label: "December", value: 12 },
+];
 
 const form = reactive({
-  date: "",
-  amount: null as number | null,
-  currency: "NGN",
-  type: "Other" as
-    | "Electricity"
-    | "Accommodation"
-    | "Subscription"
-    | "Insurance"
-    | "Utility"
-    | "Other",
   name: "",
-  status: "Unpaid" as "Paid" | "Part" | "Unpaid" | "Overdue",
+  type: "Other" as "Electricity" | "Accommodation" | "Subscription" | "Insurance" | "Other",
+  total: null as number | null,
+  currency: "NGN",
   recurrence: "Monthly" as "One-time" | "Daily" | "Weekly" | "Monthly" | "Yearly",
-  dueDate: "",
+  dueEvery: undefined as number | undefined,
   remark: "",
+  markOverdue: false,
 });
 
 const snackbar = reactive({ show: false, message: "", color: "success" });
@@ -189,15 +191,14 @@ watch(
   () => props.bill,
   (bill) => {
     if (!bill) return;
-    form.date = bill.date ? new Date(bill.date).toISOString().split("T")[0] : "";
-    form.amount = bill.amount;
-    form.currency = bill.currency ?? "NGN";
-    form.type = bill.type;
     form.name = bill.name;
-    form.status = bill.status;
+    form.type = bill.type;
+    form.total = bill.total;
+    form.currency = bill.currency ?? "NGN";
     form.recurrence = bill.recurrence;
-    form.dueDate = bill.dueDate ? new Date(bill.dueDate).toISOString().split("T")[0] : "";
-    form.remark = bill.remark;
+    form.dueEvery = bill.dueEvery;
+    form.remark = bill.remark ?? "";
+    form.markOverdue = bill.status === "Overdue";
   },
   { immediate: true }
 );
@@ -207,24 +208,21 @@ async function submit() {
   if (!valid || !props.bill) return;
 
   try {
-    await billStore.updateBill(props.bill._id, {
-      date: form.date || null,
-      amount: form.amount,
-      currency: form.currency,
-      type: form.type,
+    await billTypeStore.updateBillType(props.bill._id, {
       name: form.name,
-      status: form.status,
+      type: form.type,
+      total: form.total,
+      currency: form.currency,
       recurrence: form.recurrence,
-      dueDate: form.dueDate || null,
+      dueEvery: form.dueEvery,
       remark: form.remark,
+      status: form.markOverdue ? "Overdue" : undefined,
     });
-    showSnackbar("Bill updated successfully!", "success");
+    showSnackbar("Bill type updated successfully!", "success");
     emit("updated");
-    setTimeout(() => {
-      open.value = false;
-    }, 1000);
+    setTimeout(() => { open.value = false; }, 1000);
   } catch (err: any) {
-    showSnackbar(err.message || "Failed to update bill.", "error");
+    showSnackbar(err.message || "Failed to update bill type.", "error");
   }
 }
 </script>

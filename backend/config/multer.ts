@@ -1,5 +1,5 @@
 import multer from 'multer';
-import { CloudinaryStorage } from 'multer-storage-cloudinary';
+import CloudinaryStorage from 'multer-storage-cloudinary';
 import cloudinary from './cloudinary';
 
 // Configure Cloudinary (ensure this matches your .env keys)

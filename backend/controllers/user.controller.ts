@@ -7,7 +7,7 @@ import { SendEmailDTO, UserRequest, IUserModel } from '../interfaces';
 import { generateAccessToken, generateRefreshToken, verifyAccessToken, verifyRefreshToken } from "../utils/generateToken";
 import { generateVerificationCode } from "../utils/generateVerificationCode";
 import { hashPassword } from '../config/bcryptjs';
-import Bill from "../models/Bill";
+import BillType from "../models/BillType";
 import Plan from "../models/Plan";
 
 
@@ -125,9 +125,10 @@ export const resendVerificationEmail = async (req: Request, res: Response) => {
 
 const computeUserDetails = async (userId: string) => {
     const [bills, plans] = await Promise.all([
-        Bill.find({ user: userId }),
+        BillType.find({ user: userId }),
         Plan.find({ user: userId })
     ]);
+    
 
     const billsSummary = {
         total: bills.length,

@@ -95,12 +95,16 @@ export interface IBill extends FinancialRecord {
 }
 
 export interface BillTypeEntry {
+  user: mongoose.Types.ObjectId;
   name: string;
-  type: "Electricity" | "Accommodation" | "Subscription" | "Insurance" | "Other";
-  total: number | null;
+  type: "Electricity" | "Accommodation" | "Subscription" | "Insurance" | "Utility" | "Other";
+  total?: number;
   currency?: string;
   recurrence: "One-time" | "Daily" | "Weekly" | "Monthly" | "Yearly";
   dueEvery?: number;
+  dueDate?: Date;
+  amountPaid?: number;
+  status?: "Paid" | "Part" | "Unpaid" | "Overdue";
   remark?: string;
 }
 

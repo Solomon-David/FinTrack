@@ -4,6 +4,37 @@ import Expense from '../models/Expense';
 import Bill from '../models/Bill';
 import BillType from '../models/BillType';
 import { touchSummariesForDate } from '../utils/summaryInvalidation';
+import { computeNextDueDate } from '../utils/computeDueDate';
+import { computeRecurrencePeriod } from '../utils/computeRecurrencePeriod';
+
+const recalculateBillTypePayment = async (billTypeId: string, userId: string) => {
+    const billType = await BillType.findOne({ _id: billTypeId, user: userId });
+    if (!billType) return;
+
+    const period = computeRecurrencePeriod(billType.recurrence, billType.dueEvery, new Date());
+    const match: any = { user: billType.user, billType: billType._id };
+    if (period.start && period.end) {
+        match.date = { $gte: period.start, $lt: period.end };
+    }
+
+    const agg = await Bill.aggregate([
+        { $match: match },
+        { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+
+    const paid = agg[0]?.total ?? 0;
+    billType.amountPaid = paid;
+
+    if (billType.total && billType.total > 0) {
+        if (paid >= billType.total) billType.status = 'Paid';
+        else if (paid > 0) billType.status = 'Part';
+        else billType.status = 'Unpaid';
+    }
+
+    await billType.save();
+};
+import { computeNextDueDate } from '../utils/computeDueDate';
+import { computeRecurrencePeriod } from '../utils/computeRecurrencePeriod';
 
 
 export const addExpense = async (req: UserRequest, res: Response): Promise<void> => {
@@ -86,7 +117,7 @@ export const addExpense = async (req: UserRequest, res: Response): Promise<void>
 export const getExpenses = async (req: UserRequest, res: Response): Promise<void> => {
     try {
         const userId = req.user!.userId;
-        const expenses = await Expense.find({ user: userId }).sort({ date: -1 });
+        const expenses = await Expense.find({ user: userId }).sort({ date: 1 });
         res.status(200).json({ success: true, data: expenses });
     } catch (error: any) {
         console.error("Error fetching expenses:", error);
@@ -108,6 +139,8 @@ export const updateExpense = async (req: UserRequest, res: Response): Promise<vo
 
         const oldDate = existing.date;
         const newDate = date ? new Date(date) : existing.date;
+        const previousIsBill = existing.isBill;
+        const previousBillId = existing.bill?.toString();
 
         const updated = await Expense.findOneAndUpdate(
             { _id: id, user: userId },
@@ -127,6 +160,22 @@ export const updateExpense = async (req: UserRequest, res: Response): Promise<vo
         if (!updated) {
             res.status(404).json({ message: "Expense record not found", success: false });
             return;
+        }
+
+        if (previousIsBill && previousBillId) {
+            const bill = await Bill.findById(previousBillId);
+            if (bill) {
+                if (isBill) {
+                    if (amount !== undefined) bill.amount = amount;
+                    if (currency !== undefined) bill.currency = currency || bill.currency;
+                    bill.date = newDate;
+                    await bill.save();
+                } else {
+                    await Bill.findByIdAndDelete(previousBillId);
+                }
+
+                await recalculateBillTypePayment(bill.billType.toString(), userId);
+            }
         }
 
         await touchSummariesForDate(userId, oldDate);

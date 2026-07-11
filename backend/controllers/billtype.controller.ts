@@ -1,14 +1,16 @@
 import { Response } from 'express';
 import { UserRequest } from '../interfaces';
 import BillType from '../models/BillType';
+import Bill from '../models/Bill';
 import { computeNextDueDate } from '../utils/computeDueDate';
+import { computeRecurrencePeriod } from '../utils/computeRecurrencePeriod';
 
 export const addBillType = async (req: UserRequest, res: Response): Promise<void> => {
     try {
         const userId = req.user!.userId;
         const entries = req.body.entries as Array<{
             name: string;
-            type: "Electricity" | "Accommodation" | "Subscription" | "Insurance" | "Other";
+            type: string;
             total: number;
             currency?: string;
             recurrence: "One-time" | "Daily" | "Weekly" | "Monthly" | "Yearly";
@@ -52,8 +54,45 @@ export const addBillType = async (req: UserRequest, res: Response): Promise<void
 export const getBillTypes = async (req: UserRequest, res: Response): Promise<void> => {
     try {
         const userId = req.user!.userId;
-        const billTypes = await BillType.find({ user: userId }).sort({ createdAt: -1 });
-        res.status(200).json({ success: true, data: billTypes });
+        const billTypes = await BillType.find({ user: userId }).sort({ createdAt: -1 }).lean();
+
+        // For each bill type compute amount paid within the current recurrence period
+        const enhanced = await Promise.all(billTypes.map(async (bt: any) => {
+            try {
+                const period = computeRecurrencePeriod(bt.recurrence, bt.dueEvery, new Date());
+
+                let paid = 0;
+
+                if (!period.start || !period.end) {
+                    // One-time or no period -> sum all payments for this bill type
+                    const agg = await Bill.aggregate([
+                        { $match: { user: bt.user, billType: bt._id } },
+                        { $group: { _id: null, total: { $sum: '$amount' } } }
+                    ]);
+                    paid = agg[0]?.total ?? 0;
+                } else {
+                    const agg = await Bill.aggregate([
+                        { $match: { user: bt.user, billType: bt._id, date: { $gte: period.start, $lt: period.end } } },
+                        { $group: { _id: null, total: { $sum: '$amount' } } }
+                    ]);
+                    paid = agg[0]?.total ?? 0;
+                }
+
+                const total = Number(bt.total || 0);
+                let status = bt.status || 'Unpaid';
+                if (total > 0) {
+                    if (paid >= total) status = 'Paid';
+                    else if (paid > 0) status = 'Part';
+                    else status = 'Unpaid';
+                }
+
+                return { ...bt, amountPaid: paid, status };
+            } catch (e) {
+                return { ...bt, amountPaid: bt.amountPaid ?? 0 };
+            }
+        }));
+
+        res.status(200).json({ success: true, data: enhanced });
     } catch (error: any) {
         console.error("Error fetching bill types:", error);
         res.status(500).json({ message: error.message || "Internal server error", success: false });
