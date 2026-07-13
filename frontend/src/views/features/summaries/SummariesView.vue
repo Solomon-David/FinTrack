@@ -68,30 +68,71 @@
           >Generate Summary</v-card-title
         >
         <v-card-text class="pa-0 text-body-2 text-medium-emphasis mb-4">
-          This will generate and save a summary for the selected timeframe to your
-          records.
+          Select a timeframe or set custom date range to generate and save a summary.
         </v-card-text>
-        <v-row dense>
-          <v-col v-for="type in availableFilters" :key="type" cols="6">
-            <v-btn
-              :color="selectedType === type ? 'secondary' : 'default'"
-              :variant="selectedType === type ? 'flat' : 'outlined'"
-              block
-              rounded="lg"
-              class="text-none"
-              @click="selectedType = type"
-            >
-              {{ type }}
-            </v-btn>
-          </v-col>
-        </v-row>
+
+        <!-- Timeframe buttons -->
+        <div class="mb-4">
+          <p class="text-caption text-medium-emphasis mb-2">Quick Select:</p>
+          <v-row dense>
+            <v-col v-for="type in availableFilters" :key="type" cols="6">
+              <v-btn
+                :color="
+                  selectedType === type && !useCustomDates ? 'secondary' : 'default'
+                "
+                :variant="selectedType === type && !useCustomDates ? 'flat' : 'outlined'"
+                block
+                rounded="lg"
+                class="text-none"
+                @click="selectTimeframe(type)"
+              >
+                {{ type }}
+              </v-btn>
+            </v-col>
+          </v-row>
+        </div>
+
+        <!-- Custom Date Range Toggle -->
+        <v-checkbox
+          v-model="useCustomDates"
+          label="Use Custom Date Range"
+          density="compact"
+          class="mb-3"
+        />
+
+        <!-- Custom Date Range Inputs -->
+        <v-expand-transition>
+          <div v-if="useCustomDates" class="mb-4">
+            <v-row dense>
+              <v-col cols="6">
+                <v-text-field
+                  v-model="customStartDate"
+                  type="date"
+                  label="Start Date"
+                  variant="outlined"
+                  density="compact"
+                />
+              </v-col>
+              <v-col cols="6">
+                <v-text-field
+                  v-model="customEndDate"
+                  type="date"
+                  label="End Date"
+                  variant="outlined"
+                  density="compact"
+                />
+              </v-col>
+            </v-row>
+          </div>
+        </v-expand-transition>
+
         <v-card-actions class="justify-end ga-2 pa-0 mt-4">
-          <v-btn variant="text" @click="generateDialog = false">Cancel</v-btn>
+          <v-btn variant="text" @click="resetGenerateDialog">Cancel</v-btn>
           <v-btn
             color="secondary"
             variant="flat"
             rounded="lg"
-            :disabled="!selectedType"
+            :disabled="!isGenerateValid"
             :loading="summaryStore.isGenerating"
             @click="handleGenerate"
           >
@@ -147,6 +188,9 @@ const instantDialog = ref(false);
 const generateDialog = ref(false);
 const selectedSummary = ref<Summary | null>(null);
 const selectedType = ref<string | null>(null);
+const useCustomDates = ref(false);
+const customStartDate = ref("");
+const customEndDate = ref("");
 const searchQuery = ref("");
 const searchCategory = ref<string | null>(null);
 const activeFilter = ref<string | null>(null);
@@ -156,6 +200,13 @@ const summaryFilters = ["Daily", "Weekly", "Monthly", "Yearly"];
 const availableFilters = computed(() =>
   props.filter?.length ? props.filter : summaryFilters
 );
+
+const isGenerateValid = computed(() => {
+  if (useCustomDates.value) {
+    return selectedType.value && customStartDate.value && customEndDate.value;
+  }
+  return selectedType.value;
+});
 
 async function load() {
   await summaryStore.getSummaries();
@@ -209,6 +260,22 @@ function applyFilter(filter: string | null) {
   emit("filter-change", filter);
 }
 
+function selectTimeframe(type: string) {
+  if (!useCustomDates.value) {
+    selectedType.value = selectedType.value === type ? null : type;
+  } else {
+    selectedType.value = type;
+  }
+}
+
+function resetGenerateDialog() {
+  generateDialog.value = false;
+  selectedType.value = null;
+  useCustomDates.value = false;
+  customStartDate.value = "";
+  customEndDate.value = "";
+}
+
 function handleSearch(query: string, selectedFilter: string) {
   searchQuery.value = query;
   searchCategory.value = selectedFilter || null;
@@ -218,14 +285,23 @@ function handleSearch(query: string, selectedFilter: string) {
 async function handleGenerate() {
   if (!selectedType.value) return;
   try {
+    let startDate: Date | undefined;
+    let endDate: Date | undefined;
+
+    if (useCustomDates.value && customStartDate.value && customEndDate.value) {
+      startDate = new Date(customStartDate.value);
+      endDate = new Date(customEndDate.value);
+    }
+
     await summaryStore.generateSummary(
-      selectedType.value as "Daily" | "Weekly" | "Monthly" | "Yearly"
+      selectedType.value as "Daily" | "Weekly" | "Monthly" | "Yearly",
+      startDate,
+      endDate
     );
     snackbar.message = `${selectedType.value} summary generated successfully!`;
     snackbar.color = "success";
-    generateDialog.value = false;
+    resetGenerateDialog();
     applyFilter(selectedType.value);
-    selectedType.value = null;
   } catch {
     snackbar.message = "Failed to generate summary.";
     snackbar.color = "error";

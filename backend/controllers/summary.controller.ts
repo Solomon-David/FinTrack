@@ -13,7 +13,14 @@ type SummarySource = "cron" | "manual";
 const defaultTimeframes: SummaryTimeframe[] = ["Daily", "Weekly", "Monthly", "Yearly"];
 
 // Helper to get date range
-const getDateRange = (timeframe: SummaryTimeframe, date: Date) => {
+const getDateRange = (timeframe: SummaryTimeframe, date: Date, customStart?: Date, customEnd?: Date) => {
+    if (customStart && customEnd) {
+        return { 
+            start: new Date(customStart.getTime()), 
+            end: new Date(customEnd.getTime()) 
+        };
+    }
+
     const start = new Date(date);
     const end = new Date(date);
 
@@ -21,11 +28,9 @@ const getDateRange = (timeframe: SummaryTimeframe, date: Date) => {
         start.setHours(0, 0, 0, 0);
         end.setHours(23, 59, 59, 999);
     } else if (timeframe === "Weekly") {
-        const day = start.getDay();
-        start.setDate(start.getDate() - day);
-        start.setHours(0, 0, 0, 0);
-        end.setDate(end.getDate() - day + 6);
         end.setHours(23, 59, 59, 999);
+        start.setDate(start.getDate() - 7);
+        start.setHours(0, 0, 0, 0);
     } else if (timeframe === "Monthly") {
         start.setDate(1);
         start.setHours(0, 0, 0, 0);
@@ -47,14 +52,16 @@ export const generateSummaryForUser = async (
     date: Date = new Date(),
     timeframe?: SummaryTimeframe,
     persist: boolean = false,
-    source: SummarySource = "cron"
+    source: SummarySource = "cron",
+    customStartDate?: Date,
+    customEndDate?: Date
 ) => {
     const timeframes = timeframe ? [timeframe] : defaultTimeframes;
 
     const results: Array<any> = [];
 
     for (const tf of timeframes) {
-        const { start, end } = getDateRange(tf, date);
+        const { start, end } = getDateRange(tf, date, customStartDate, customEndDate);
         const dateFilter = { user: userId, date: { $gte: start, $lte: end } };
 
         const [incomes, expenses, rcdata, bills, plans] = await Promise.all([
@@ -138,13 +145,23 @@ export const generateSummaryNow = async (req: UserRequest, res: Response): Promi
     try {
         const userId = req.user!.userId;
         const timeframe = req.body?.timeframe as SummaryTimeframe | undefined;
+        const startDate = req.body?.startDate ? new Date(req.body.startDate) : undefined;
+        const endDate = req.body?.endDate ? new Date(req.body.endDate) : undefined;
 
         await Summary.deleteMany({
             user: userId,
             $or: [{ source: { $exists: false } }, { source: "manual" }],
         });
 
-        const results = await generateSummaryForUser(userId, new Date(), timeframe, false, "manual");
+        const results = await generateSummaryForUser(
+            userId, 
+            new Date(), 
+            timeframe, 
+            true, 
+            "manual",
+            startDate,
+            endDate
+        );
         res.status(200).json({
             success: true,
             message: "Summary generated successfully",

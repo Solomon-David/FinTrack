@@ -39,11 +39,11 @@ export const useSummaryStore = defineStore('summary', () => {
     }
   }
 
-  async function generateSummary(timeframe: "Daily" | "Weekly" | "Monthly" | "Yearly") {
+  async function generateSummary(timeframe: "Daily" | "Weekly" | "Monthly" | "Yearly", startDate?: Date, endDate?: Date) {
     isGenerating.value = true;
     error.value = null;
     try {
-      const response = await summaryApi.generateSummary(timeframe);
+      const response = await summaryApi.generateSummary(timeframe, startDate, endDate);
       const summary = response.data.data as Summary;
       summaries.value.unshift(summary);
       return summary;
