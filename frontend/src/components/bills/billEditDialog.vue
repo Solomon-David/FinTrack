@@ -1,119 +1,132 @@
 <template>
-  <v-dialog v-model="open" class="w-xs-75 w-sm-66" scrim="true">
-    <v-container class="px-6 pb-5 pt-1 bg-light rounded-lg d-flex flex-column gap-3">
+  <v-dialog v-model="open" class="w-xs-75 w-sm-66 overflow-y" scrim="true">
+    <v-container
+      class="px-6 pb-5 pt-1 bg-light rounded-lg d-flex flex-column gap-3 overflow-y-auto"
+    >
       <DialogHeaderComponent title="Edit Bill Type" v-model="open" />
+      <div class="d-flex flex-column w-100 px-1 overflow-y-auto overflow-x-hidden">
+        <v-form ref="formRef">
+          <v-text-field
+            v-model="form.name"
+            variant="outlined"
+            label="Bill Name"
+            density="comfortable"
+            color="secondary"
+            :rules="[required]"
+          />
 
-      <v-form ref="formRef">
-        <v-text-field
-          v-model="form.name"
-          variant="outlined"
-          label="Bill Name"
-          density="comfortable"
-          color="secondary"
-          :rules="[required]"
-        />
+          <v-select
+            v-model="form.type"
+            :items="types"
+            label="Type"
+            variant="outlined"
+            density="comfortable"
+            color="secondary"
+          />
 
-        <v-select
-          v-model="form.type"
-          :items="types"
-          label="Type"
-          variant="outlined"
-          density="comfortable"
-          color="secondary"
-        />
+          <v-text-field
+            v-model="form.total"
+            variant="outlined"
+            label="Total Owed Per Cycle (₦)"
+            type="number"
+            density="comfortable"
+            color="secondary"
+            :rules="[required]"
+          >
+            <template #append-inner>
+              <v-btn
+                size="x-small"
+                variant="tonal"
+                color="secondary"
+                rounded="lg"
+                class="text-caption font-weight-bold"
+                @click="form.total = form.total ? Number(form.total) * 1000 : 1000"
+              >
+                000
+              </v-btn>
+            </template>
+          </v-text-field>
 
-        <v-text-field
-          v-model="form.total"
-          variant="outlined"
-          label="Total Owed Per Cycle (₦)"
-          type="number"
-          density="comfortable"
-          color="secondary"
-          :rules="[required]"
-        >
-          <template #append-inner>
-            <v-btn
-              size="x-small"
-              variant="tonal"
-              color="secondary"
-              rounded="lg"
-              class="text-caption font-weight-bold"
-              @click="form.total = form.total ? Number(form.total) * 1000 : 1000"
-            >
-              000
-            </v-btn>
-          </template>
-        </v-text-field>
+          <v-select
+            v-model="form.recurrence"
+            :items="recurrences"
+            label="Recurrence"
+            variant="outlined"
+            density="comfortable"
+            color="secondary"
+          />
 
-        <v-select
-          v-model="form.recurrence"
-          :items="recurrences"
-          label="Recurrence"
-          variant="outlined"
-          density="comfortable"
-          color="secondary"
-        />
+          <v-row
+            dense
+            v-if="form.recurrence !== 'One-time' && form.recurrence !== 'Daily'"
+          >
+            <v-col cols="12">
+              <v-select
+                v-if="form.recurrence === 'Weekly'"
+                v-model="form.dueEvery"
+                :items="weekDays"
+                item-title="label"
+                item-value="value"
+                label="Due Every"
+                variant="outlined"
+                density="comfortable"
+                color="secondary"
+              />
+              <v-text-field
+                v-else-if="form.recurrence === 'Monthly'"
+                v-model.number="form.dueEvery"
+                type="number"
+                min="1"
+                max="31"
+                label="Due Every (Day of Month)"
+                variant="outlined"
+                density="comfortable"
+                color="secondary"
+              />
+              <v-select
+                v-else-if="form.recurrence === 'Yearly'"
+                v-model="form.dueEvery"
+                :items="months"
+                item-title="label"
+                item-value="value"
+                label="Due Every (Month)"
+                variant="outlined"
+                density="comfortable"
+                color="secondary"
+              />
+            </v-col>
+          </v-row>
 
-        <v-row dense v-if="form.recurrence !== 'One-time' && form.recurrence !== 'Daily'">
-          <v-col cols="12">
-            <v-select
-              v-if="form.recurrence === 'Weekly'"
-              v-model="form.dueEvery"
-              :items="weekDays"
-              item-title="label"
-              item-value="value"
-              label="Due Every"
-              variant="outlined"
-              density="comfortable"
-              color="secondary"
-            />
-            <v-text-field
-              v-else-if="form.recurrence === 'Monthly'"
-              v-model.number="form.dueEvery"
-              type="number"
-              min="1"
-              max="31"
-              label="Due Every (Day of Month)"
-              variant="outlined"
-              density="comfortable"
-              color="secondary"
-            />
-            <v-select
-              v-else-if="form.recurrence === 'Yearly'"
-              v-model="form.dueEvery"
-              :items="months"
-              item-title="label"
-              item-value="value"
-              label="Due Every (Month)"
-              variant="outlined"
-              density="comfortable"
-              color="secondary"
-            />
-          </v-col>
-        </v-row>
+          <!-- Manual overdue toggle -->
+          <v-checkbox
+            v-model="form.markOverdue"
+            label="Manually mark as Overdue"
+            color="error"
+            density="comfortable"
+            hide-details
+            class="mb-2"
+          />
 
-        <!-- Manual overdue toggle -->
-        <v-checkbox
-          v-model="form.markOverdue"
-          label="Manually mark as Overdue"
-          color="error"
-          density="comfortable"
-          hide-details
-          class="mb-2"
-        />
-
-        <v-text-field
-          v-model="form.remark"
-          variant="outlined"
-          label="Remark (optional)"
-          density="comfortable"
-          color="secondary"
-        />
-      </v-form>
-
+          <v-text-field
+            v-model="form.remark"
+            variant="outlined"
+            label="Remark (optional)"
+            density="comfortable"
+            color="secondary"
+          />
+        </v-form>
+      </div>
       <v-row dense>
         <v-col cols="6">
-          <v-btn variant="tonal" color="error" block rounded="lg" height="44" class="text-none" @click="open = false">
+          <v-btn
+            variant="tonal"
+            color="error"
+            block
+            rounded="lg"
+            height="44"
+            class="text-none"
+            @click="open = false"
+          >
             Cancel
           </v-btn>
         </v-col>
@@ -156,20 +169,37 @@ const formRef = ref();
 const types = ["Electricity", "Accommodation", "Subscription", "Insurance", "Other"];
 const recurrences = ["One-time", "Daily", "Weekly", "Monthly", "Yearly"];
 const weekDays = [
-  { label: "Sunday", value: 0 }, { label: "Monday", value: 1 }, { label: "Tuesday", value: 2 },
-  { label: "Wednesday", value: 3 }, { label: "Thursday", value: 4 }, { label: "Friday", value: 5 },
+  { label: "Sunday", value: 0 },
+  { label: "Monday", value: 1 },
+  { label: "Tuesday", value: 2 },
+  { label: "Wednesday", value: 3 },
+  { label: "Thursday", value: 4 },
+  { label: "Friday", value: 5 },
   { label: "Saturday", value: 6 },
 ];
 const months = [
-  { label: "January", value: 1 }, { label: "February", value: 2 }, { label: "March", value: 3 },
-  { label: "April", value: 4 }, { label: "May", value: 5 }, { label: "June", value: 6 },
-  { label: "July", value: 7 }, { label: "August", value: 8 }, { label: "September", value: 9 },
-  { label: "October", value: 10 }, { label: "November", value: 11 }, { label: "December", value: 12 },
+  { label: "January", value: 1 },
+  { label: "February", value: 2 },
+  { label: "March", value: 3 },
+  { label: "April", value: 4 },
+  { label: "May", value: 5 },
+  { label: "June", value: 6 },
+  { label: "July", value: 7 },
+  { label: "August", value: 8 },
+  { label: "September", value: 9 },
+  { label: "October", value: 10 },
+  { label: "November", value: 11 },
+  { label: "December", value: 12 },
 ];
 
 const form = reactive({
   name: "",
-  type: "Other" as "Electricity" | "Accommodation" | "Subscription" | "Insurance" | "Other",
+  type: "Other" as
+    | "Electricity"
+    | "Accommodation"
+    | "Subscription"
+    | "Insurance"
+    | "Other",
   total: null as number | null,
   currency: "NGN",
   recurrence: "Monthly" as "One-time" | "Daily" | "Weekly" | "Monthly" | "Yearly",
@@ -220,7 +250,9 @@ async function submit() {
     });
     showSnackbar("Bill type updated successfully!", "success");
     emit("updated");
-    setTimeout(() => { open.value = false; }, 1000);
+    setTimeout(() => {
+      open.value = false;
+    }, 1000);
   } catch (err: any) {
     showSnackbar(err.message || "Failed to update bill type.", "error");
   }

@@ -18,14 +18,26 @@
       </div>
 
       <div class="overflow-y-auto flex-grow-1">
-        
-
         <div
           v-if="!summaryStore.isLoading && filteredSummaries.length === 0"
           class="text-center py-10"
         >
           <v-icon size="48" color="grey-lighten-1">mdi-chart-box-outline</v-icon>
           <p class="text-medium-emphasis mt-2">No summaries found</p>
+        </div>
+        <div v-else>
+          <SummaryItem
+            v-for="summary in filteredSummaries"
+            :key="summary.id"
+            :summary="summary"
+            @export="(s) => summaryStore.exportSummary(s)"
+            @delete="
+              (s) => {
+                selectedSummary.value = s;
+                deleteDialog = true;
+              }
+            "
+          />
         </div>
       </div>
     </div>
@@ -189,6 +201,4 @@ async function handleGenerate() {
     snackbar.show = true;
   }
 }
-
-
 </script>

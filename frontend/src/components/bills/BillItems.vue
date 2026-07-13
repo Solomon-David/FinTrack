@@ -5,7 +5,6 @@
       <template #prepend>
         <div class="d-flex flex-column justify-center mr-3">
           <span class="text-caption text-medium-emphasis">{{ bill.recurrence }}</span>
-          <span class="font-weight-bold text-body-2"> ₦{{ bill.total }} </span>
           <div class="mt-1 d-flex ga-2">
             <v-chip size="x-small" text-color="white">
               ₦{{ Number(bill.amountPaid).toLocaleString("en-NG") }} / ₦{{
@@ -63,9 +62,6 @@
       </v-col>
       <v-col cols="2">
         <span class="text-caption text-medium-emphasis">{{ bill.type }}</span>
-      </v-col>
-      <v-col cols="2">
-        <span class="text-body-2"> ₦{{ bill.total.toLocaleString("en-NG") }} </span>
       </v-col>
       <v-col cols="2" class="d-flex align-center">
         <v-chip size="small" text-color="white">
