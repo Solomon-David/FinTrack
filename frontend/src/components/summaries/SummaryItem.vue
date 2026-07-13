@@ -98,7 +98,6 @@ const emit = defineEmits<{
   export: [summary: Summary];
 }>();
 
-console.log("type: ", props.type);
 
 function get(category: string) {
   return props.summary.data.find((d) => d.category === category)?.total ?? 0;

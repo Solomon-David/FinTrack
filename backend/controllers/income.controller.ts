@@ -103,7 +103,7 @@ export const deleteIncome = async (req: UserRequest, res: Response): Promise<voi
 export const getIncomes = async (req: UserRequest, res: Response): Promise<void> => {
     try {
         const userId = req.user!.userId;
-        const incomes = await Income.find({ user: userId }).sort({ date: -1 });
+        const incomes = await Income.find({ user: userId }).sort({ date: 1 });
         res.status(200).json({ success: true, data: incomes });
     } catch (error: any) {
         console.error("Error fetching incomes:", error);

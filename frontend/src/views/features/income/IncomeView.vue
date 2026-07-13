@@ -4,12 +4,12 @@
     <SearchComponent :filters="filters" :on-search-fn="handleSearch" />
 
     <!-- Records -->
-    <div class="px-4 d-flex flex-column" style="height: 55vh">
+    <div class="px-4 pt-2 d-flex flex-column" style="height: 55vh">
       <div class="d-flex align-center justify-space-between mb-2">
         <v-spacer />
         <h2 class="text-h6 font-weight-bold">Records</h2>
         <v-spacer />
-        <v-btn
+        <v-btn 
           icon="mdi-refresh"
           variant="text"
           size="small"

@@ -3,15 +3,11 @@
   <v-app-bar height="100" class="text-secondary px-2 py-0" elevation="0" align="start">
     <v-app-bar-nav-icon class="text-h5" @click="openMenu = !openMenu" />
 
-    <v-spacer></v-spacer>
-
     <v-app-bar-title
-      class="text-h6 text-sm-h5 font-weight-bold text-black text-center flex-grow-1"
+      class="text-title-medium text-md-title font-weight-bold text-black text-center flex-grow-1"
       style="white-space: normal"
       >{{ props.title }}</v-app-bar-title
     >
-
-    <v-spacer></v-spacer>
 
     <!-- This container holds the Avatar -->
     <div>

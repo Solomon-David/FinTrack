@@ -10,7 +10,7 @@ export interface SummaryDataEntry {
 export interface Summary {
   _id: string;
   user: string;
-  timeframe: "Daily" | "Weekly" | "Monthly" | "Yearly";
+  timeframe: "Daily" | "Monthly" | "Yearly";
   category: string;
   data: SummaryDataEntry[];
   currency: string;
@@ -39,13 +39,22 @@ export const useSummaryStore = defineStore('summary', () => {
     }
   }
 
-  async function generateSummary(timeframe: "Daily" | "Weekly" | "Monthly" | "Yearly", startDate?: Date, endDate?: Date) {
+  // Generates a summary for preview only — it is NOT written to the
+  // database, so it's intentionally not added to `summaries` (which
+  // reflects what's actually persisted). The caller is responsible for
+  // displaying the returned summary (e.g. in a dialog).
+  async function generateSummary(
+    timeframe: "Daily" | "Weekly" | "Monthly" | "Yearly",
+    date?: string
+  ) {
     isGenerating.value = true;
     error.value = null;
     try {
-      const response = await summaryApi.generateSummary(timeframe, startDate, endDate);
-      const summary = response.data.data as Summary;
-      summaries.value.unshift(summary);
+      const response = await summaryApi.generateSummary(timeframe, date);
+      // The backend returns an array of results (one per requested timeframe);
+      // since we always pass a single timeframe here, take the first entry.
+      const results = response.data.data as Summary[];
+      const summary = Array.isArray(results) ? results[0] : (results as unknown as Summary);
       return summary;
     } catch (err: any) {
       const msg = err.response?.data?.message || err.message || 'Failed to generate summary';

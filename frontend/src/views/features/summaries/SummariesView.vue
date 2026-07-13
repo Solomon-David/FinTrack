@@ -1,10 +1,12 @@
 <template>
   <v-container fluid class="pa-0">
-    <SearchComponent :filters="availableFilters" :on-search-fn="handleSearch" />
+    <SearchComponent :filters="summaryCategories" :on-search-fn="handleSearch" />
 
-    <div class="px-4 d-flex flex-column" style="height: calc(100vh - 180px)">
-      <div class="d-flex align-center justify-center mb-2 position-relative">
+    <div class="px-4 pt-2 d-flex flex-column" style="height: calc(100vh - 180px)">
+      <div class="d-flex align-center justify-center mb-2">
+        <v-spacer />
         <h2 class="text-h6 font-weight-bold">Records</h2>
+        <v-spacer />
         <v-btn
           icon="mdi-refresh"
           variant="text"
@@ -17,7 +19,15 @@
         />
       </div>
 
-      <div ref="listContainer" class="overflow-y-auto flex-grow-1">
+      <div class="overflow-y-auto flex-grow-1">
+        <SummaryItem
+          v-for="summary in filteredSummaries"
+          :key="summary._id"
+          :summary="summary"
+          @export="handleExport"
+          @delete="confirmDelete"
+        />
+
         <div
           v-if="!summaryStore.isLoading && filteredSummaries.length === 0"
           class="text-center py-10"
@@ -25,30 +35,23 @@
           <v-icon size="48" color="grey-lighten-1">mdi-chart-box-outline</v-icon>
           <p class="text-medium-emphasis mt-2">No summaries found</p>
         </div>
-        <div v-else>
-          <SummaryItem
-            v-for="summary in filteredSummaries"
-            :key="summary.id"
-            :summary="summary"
-            @export="(s) => summaryStore.exportSummary(s)"
-            @delete="
-              (s) => {
-                selectedSummary.value = s;
-                deleteDialog = true;
-              }
-            "
-          />
-        </div>
       </div>
     </div>
 
     <!-- Action buttons -->
     <div class="d-flex justify-center ga-3 mt-4 mb-6">
-      <v-btn color="secondary" variant="tonal" rounded="xl" @click="instantDialog = true">
+      <v-btn
+        color="secondary"
+        class="text-caption text-uppercase"
+        variant="tonal"
+        rounded="xl"
+        @click="instantDialog = true"
+      >
         Instant Summary
       </v-btn>
       <v-btn
         color="secondary"
+        class="text-caption text-uppercase"
         variant="flat"
         rounded="xl"
         :loading="summaryStore.isGenerating"
@@ -61,84 +64,122 @@
     <!-- Instant Summary Dialog -->
     <GenerateSummaryDialog v-model="instantDialog" />
 
-    <!-- Generate & Save Summary Dialog -->
+    <!-- Generate Summary Dialog — computes and previews only, nothing is saved -->
     <v-dialog v-model="generateDialog" class="w-xs-75 w-sm-66">
       <v-card rounded="lg" class="pa-4">
-        <v-card-title class="font-weight-bold text-body-1 pa-0 mb-4"
-          >Generate Summary</v-card-title
-        >
-        <v-card-text class="pa-0 text-body-2 text-medium-emphasis mb-4">
-          Select a timeframe or set custom date range to generate and save a summary.
-        </v-card-text>
-
-        <!-- Timeframe buttons -->
-        <div class="mb-4">
-          <p class="text-caption text-medium-emphasis mb-2">Quick Select:</p>
+        <!-- Step 1: pick timeframe + period -->
+        <template v-if="!generatedPreview">
+          <v-card-title class="font-weight-bold text-body-1 pa-0 mb-4"
+            >Generate Summary</v-card-title
+          >
+          <v-card-text class="pa-0 text-body-2 text-medium-emphasis mb-4">
+            This will generate a summary for the selected period and show it here. It
+            won't be saved to your records.
+          </v-card-text>
           <v-row dense>
-            <v-col v-for="type in availableFilters" :key="type" cols="6">
+            <v-col v-for="type in summaryTypes" :key="type" cols="6">
               <v-btn
-                :color="
-                  selectedType === type && !useCustomDates ? 'secondary' : 'default'
-                "
-                :variant="selectedType === type && !useCustomDates ? 'flat' : 'outlined'"
+                :color="selectedType === type ? 'secondary' : 'default'"
+                :variant="selectedType === type ? 'flat' : 'outlined'"
                 block
                 rounded="lg"
                 class="text-none"
-                @click="selectTimeframe(type)"
+                @click="selectedType = type"
               >
                 {{ type }}
               </v-btn>
             </v-col>
           </v-row>
-        </div>
 
-        <!-- Custom Date Range Toggle -->
-        <v-checkbox
-          v-model="useCustomDates"
-          label="Use Custom Date Range"
-          density="compact"
-          class="mb-3"
-        />
+          <!-- Custom period selector — the input type adapts to the chosen timeframe:
+               dates for Daily/Weekly, a month picker for Monthly, a year for Yearly -->
+          <v-row dense v-if="selectedType" class="mt-2">
+            <v-col cols="12">
+              <v-text-field
+                v-if="selectedType === 'Daily' || selectedType === 'Weekly'"
+                v-model="selectedDate"
+                variant="outlined"
+                :label="selectedType === 'Daily' ? 'Date' : 'Any date within the week'"
+                type="date"
+                density="comfortable"
+                color="secondary"
+                hint="Pick the day you want to summarize"
+                persistent-hint
+              />
+              <v-text-field
+                v-else-if="selectedType === 'Monthly'"
+                v-model="selectedDate"
+                variant="outlined"
+                label="Month"
+                type="month"
+                density="comfortable"
+                color="secondary"
+                hint="Pick the month you want to summarize"
+                persistent-hint
+              />
+              <v-text-field
+                v-else-if="selectedType === 'Yearly'"
+                v-model="selectedDate"
+                variant="outlined"
+                label="Year"
+                type="number"
+                density="comfortable"
+                color="secondary"
+                :min="1970"
+                :max="2100"
+                hint="Pick the year you want to summarize"
+                persistent-hint
+              />
+            </v-col>
+          </v-row>
 
-        <!-- Custom Date Range Inputs -->
-        <v-expand-transition>
-          <div v-if="useCustomDates" class="mb-4">
-            <v-row dense>
-              <v-col cols="6">
-                <v-text-field
-                  v-model="customStartDate"
-                  type="date"
-                  label="Start Date"
-                  variant="outlined"
-                  density="compact"
-                />
-              </v-col>
-              <v-col cols="6">
-                <v-text-field
-                  v-model="customEndDate"
-                  type="date"
-                  label="End Date"
-                  variant="outlined"
-                  density="compact"
-                />
-              </v-col>
-            </v-row>
+          <v-card-actions class="justify-end ga-2 pa-0 mt-4">
+            <v-btn variant="text" @click="generateDialog = false">Cancel</v-btn>
+            <v-btn
+              color="secondary"
+              variant="flat"
+              rounded="lg"
+              :disabled="!selectedType || !selectedDate"
+              :loading="summaryStore.isGenerating"
+              @click="handleGenerate"
+            >
+              Generate
+            </v-btn>
+          </v-card-actions>
+        </template>
+
+        <!-- Step 2: preview of the just-generated (not saved) summary -->
+        <template v-else>
+          <div class="d-flex align-center ga-2 mb-3">
+            <v-btn
+              icon="mdi-arrow-left"
+              size="x-small"
+              variant="text"
+              color="secondary"
+              @click="generatedPreview = null"
+            />
+            <span class="text-body-2 font-weight-medium text-medium-emphasis">
+              Summary preview
+            </span>
           </div>
-        </v-expand-transition>
 
-        <v-card-actions class="justify-end ga-2 pa-0 mt-4">
-          <v-btn variant="text" @click="resetGenerateDialog">Cancel</v-btn>
-          <v-btn
-            color="secondary"
-            variant="flat"
-            rounded="lg"
-            :disabled="!isGenerateValid"
-            :loading="summaryStore.isGenerating"
-            @click="handleGenerate"
-          >
-            Generate
-          </v-btn>
-        </v-card-actions>
+          <SummaryItem
+            :summary="generatedPreview"
+            @export="handleExport"
+            @delete="() => {}"
+          />
+
+          <v-card-actions class="justify-end pa-0 mt-2">
+            <v-btn
+              color="secondary"
+              variant="flat"
+              rounded="lg"
+              @click="generateDialog = false"
+            >
+              Done
+            </v-btn>
+          </v-card-actions>
+        </template>
       </v-card>
     </v-dialog>
 
@@ -169,69 +210,49 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted, watch, nextTick } from "vue";
+import { ref, computed, reactive, onMounted, watch } from "vue";
 import { useSummaryStore } from "@/stores/summary.store";
 import type { Summary } from "@/stores/summary.store";
 import SummaryItem from "@/components/summaries/SummaryItem.vue";
 import GenerateSummaryDialog from "@/components/summaries/GenerateSummaryDialog.vue";
 import SearchComponent from "@/components/shared/SearchComponent.vue";
 
-const props = defineProps<{ filter?: string[] | null }>();
-const emit = defineEmits<{ "filter-change": [filter: string | null] }>();
-
 const summaryStore = useSummaryStore();
-
-const listContainer = ref<HTMLElement | null>(null);
 
 const deleteDialog = ref(false);
 const instantDialog = ref(false);
 const generateDialog = ref(false);
 const selectedSummary = ref<Summary | null>(null);
 const selectedType = ref<string | null>(null);
-const useCustomDates = ref(false);
-const customStartDate = ref("");
-const customEndDate = ref("");
+// Holds the raw value from whichever input is showing:
+// "YYYY-MM-DD" for Daily/Weekly, "YYYY-MM" for Monthly, "YYYY" for Yearly
+const selectedDate = ref<string>("");
+// Holds the summary just returned from the generate call so it can be
+// previewed inside the dialog. This is never persisted to the database —
+// it exists purely for on-screen display.
+const generatedPreview = ref<Summary | null>(null);
 const searchQuery = ref("");
 const searchCategory = ref<string | null>(null);
-const activeFilter = ref<string | null>(null);
 const snackbar = reactive({ show: false, message: "", color: "success" });
 
-const summaryFilters = ["Daily", "Weekly", "Monthly", "Yearly"];
-const availableFilters = computed(() =>
-  props.filter?.length ? props.filter : summaryFilters
-);
+const summaryTypes = ["Daily", "Weekly", "Monthly", "Yearly"];
+const summaryCategories = ["Daily", "Weekly", "Monthly", "Yearly"];
 
-const isGenerateValid = computed(() => {
-  if (useCustomDates.value) {
-    return selectedType.value && customStartDate.value && customEndDate.value;
-  }
-  return selectedType.value;
-});
+onMounted(() => load());
 
 async function load() {
   await summaryStore.getSummaries();
 }
 
-// helper: get ISO week number
-function getISOWeek(date: Date) {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayNum = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  const weekNo = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
-  return weekNo;
-}
-
 const filteredSummaries = computed(() => {
   let results = summaryStore.summaries;
-  const categoryToFilter = searchCategory.value ?? activeFilter.value;
 
   // Category filter — filter by timeframe
-  if (categoryToFilter) {
-    results = results.filter((s) => s.timeframe === categoryToFilter);
+  if (searchCategory.value) {
+    results = results.filter((s) => s.timeframe === searchCategory.value);
   }
 
-  // Search filter — match against period dates (include weeks)
+  // Search filter — match against period dates
   const q = searchQuery.value.trim();
   if (!q) return results;
 
@@ -243,65 +264,56 @@ const filteredSummaries = computed(() => {
       "0"
     )}/${start.getFullYear()}`;
     const year = `${start.getFullYear()}`;
-    const week = String(getISOWeek(start)).padStart(2, "0");
-    const weekYear = `W${week}/${start.getFullYear()}`;
-    return (
-      full.includes(q) ||
-      monthYear.includes(q) ||
-      year.includes(q) ||
-      weekYear.includes(q) ||
-      week.includes(q)
-    );
+    return full.includes(q) || monthYear.includes(q) || year.includes(q);
   });
 });
 
-function applyFilter(filter: string | null) {
-  activeFilter.value = filter;
-  emit("filter-change", filter);
-}
-
-function selectTimeframe(type: string) {
-  if (!useCustomDates.value) {
-    selectedType.value = selectedType.value === type ? null : type;
-  } else {
-    selectedType.value = type;
-  }
-}
-
-function resetGenerateDialog() {
-  generateDialog.value = false;
-  selectedType.value = null;
-  useCustomDates.value = false;
-  customStartDate.value = "";
-  customEndDate.value = "";
-}
-
-function handleSearch(query: string, selectedFilter: string) {
+function handleSearch(query: string, _filter: string, category: string | null) {
   searchQuery.value = query;
-  searchCategory.value = selectedFilter || null;
-  applyFilter(selectedFilter || null);
+  searchCategory.value = category;
+}
+
+// Reset the picked period whenever the timeframe changes so a stale value
+// (e.g. a month string left over from "Monthly") isn't sent for "Yearly"
+watch(selectedType, () => {
+  selectedDate.value = "";
+});
+
+// Clear selections whenever the dialog is closed
+watch(generateDialog, (isOpen) => {
+  if (!isOpen) {
+    selectedType.value = null;
+    selectedDate.value = "";
+    generatedPreview.value = null;
+  }
+});
+
+// Converts whatever the active input produced into the ISO date string
+// the backend expects, based on the granularity of the chosen timeframe.
+function buildDateParam(type: string, value: string): string {
+  if (type === "Monthly") {
+    // <input type="month"> gives "YYYY-MM"
+    return `${value}-01`;
+  }
+  if (type === "Yearly") {
+    // <input type="number"> gives "YYYY"
+    return `${value}-01-01`;
+  }
+  // Daily / Weekly — <input type="date"> already gives "YYYY-MM-DD"
+  return value;
 }
 
 async function handleGenerate() {
-  if (!selectedType.value) return;
+  if (!selectedType.value || !selectedDate.value) return;
   try {
-    let startDate: Date | undefined;
-    let endDate: Date | undefined;
-
-    if (useCustomDates.value && customStartDate.value && customEndDate.value) {
-      startDate = new Date(customStartDate.value);
-      endDate = new Date(customEndDate.value);
-    }
-
-    await summaryStore.generateSummary(
+    const dateParam = buildDateParam(selectedType.value, selectedDate.value);
+    const summary = await summaryStore.generateSummary(
       selectedType.value as "Daily" | "Weekly" | "Monthly" | "Yearly",
-      startDate,
-      endDate
+      dateParam
     );
-    snackbar.message = `${selectedType.value} summary generated successfully!`;
+    generatedPreview.value = summary;
+    snackbar.message = `${selectedType.value} summary generated!`;
     snackbar.color = "success";
-    resetGenerateDialog();
-    applyFilter(selectedType.value);
   } catch {
     snackbar.message = "Failed to generate summary.";
     snackbar.color = "error";
@@ -310,30 +322,20 @@ async function handleGenerate() {
   }
 }
 
+function handleExport(summary: Summary) {
+  console.log("Export:", summary);
+}
+
+function confirmDelete(summary: Summary) {
+  selectedSummary.value = summary;
+  deleteDialog.value = true;
+}
+
 async function handleDelete() {
   if (!selectedSummary.value) return;
-  await summaryStore.deleteSummary(selectedSummary.value._id);
+  // No delete endpoint currently exists on the backend/store for summaries.
+  // Just close the dialog and clear selection for now so the UI doesn't hang.
   deleteDialog.value = false;
   selectedSummary.value = null;
 }
-
-function scrollToEnd() {
-  nextTick(() => {
-    const el = listContainer.value;
-    if (el) el.scrollTop = el.scrollHeight;
-  });
-}
-
-// to automatically scroll to the end
-watch(
-  filteredSummaries,
-  () => {
-    scrollToEnd();
-  },
-  { deep: true }
-);
-
-onMounted(() => {
-  load().then(scrollToEnd);
-});
 </script>

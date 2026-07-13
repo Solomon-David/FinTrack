@@ -143,7 +143,7 @@ const quickActions = [
     label: "Create A Plan",
     icon: "mdi-check",
     color: "#1565C0",
-    component: () => import("@/components/income/AddIncomeDialog.vue"),
+    component: () => import("@/components/plans/AddPlanDialog.vue"),
   },
   {
     label: "Record RC-Data",

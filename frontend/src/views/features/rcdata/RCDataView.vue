@@ -2,7 +2,7 @@
   <v-container fluid class="pa-0">
     <SearchComponent :filters="filters" :on-search-fn="handleSearch" />
 
-    <div class="px-4 d-flex flex-column" style="height: calc(100vh - 180px)">
+    <div class="px-4 pt-2 d-flex flex-column" style="height: calc(100vh - 180px)">
       <div class="d-flex align-center justify-space-between mb-2">
         <v-spacer />
         <h2 class="text-h6 font-weight-bold">Records</h2>

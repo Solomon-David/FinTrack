@@ -1,26 +1,27 @@
-import express, { Request, Response } from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import { connectDB } from './config/db';
+import express, { Request, Response } from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import { connectDB } from "./config/db";
 
 //routes
-import authRoutes from './routes/auth.routes';
-import userRoutes from './routes/user.routes';
-import incomeRoutes from './routes/income.routes';
-import expenseRoutes from './routes/expense.routes';
-import rcdataRoutes from './routes/rcdata.routes';
-import summaryRoutes from './routes/summary.routes';
-import billRoutes from './routes/bill.routes';
+import authRoutes from "./routes/auth.routes";
+import userRoutes from "./routes/user.routes";
+import incomeRoutes from "./routes/income.routes";
+import expenseRoutes from "./routes/expense.routes";
+import rcdataRoutes from "./routes/rcdata.routes";
+import summaryRoutes from "./routes/summary.routes";
+import billRoutes from "./routes/bill.routes";
 import billTypeRoutes from "./routes/billtypes.routes";
+import planRoutes from "./routes/plan.routes";
 
-import { startSummaryJob } from './utils/summaryCronJob';
+import { startSummaryJob } from "./utils/summaryCronJob";
 
 // Load environment variables
 dotenv.config();
 
 // Database connection
 connectDB().catch((err: Error) => {
-  console.error('Failed to connect to MongoDB:', err);
+  console.error("Failed to connect to MongoDB:", err);
   process.exit(1);
 });
 
@@ -28,12 +29,12 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors({ origin: 'http://localhost:5173' }));
+app.use(cors());
 
 // Skip body parsers for multipart/form-data — multer handles those
 app.use((req, res, next) => {
-  const contentType = req.headers['content-type'] || '';
-  if (contentType.includes('multipart/form-data')) {
+  const contentType = req.headers["content-type"] || "";
+  if (contentType.includes("multipart/form-data")) {
     return next();
   }
   express.json()(req, res, () => {
@@ -49,18 +50,19 @@ app.use("/api/rcdata", rcdataRoutes);
 app.use("/api/summaries", summaryRoutes);
 app.use("/api/bills", billRoutes);
 app.use("/api/bill-types", billTypeRoutes);
+app.use("/api/plans", planRoutes);
 // Health check endpoint
-app.get('/api/health', (req: Request, res: Response) => {
+app.get("/api/health", (req: Request, res: Response) => {
   res.status(200).json({
-    status: 'OK',
+    status: "OK",
     timestamp: new Date().toISOString(),
     uptime: `${process.uptime()} seconds`,
-    version: '1.0.0'
+    version: "1.0.0",
   });
 });
 
-app.get('/', (req: Request, res: Response) => {
-  res.json({ message: 'Welcome to FinTrack API' });
+app.get("/", (req: Request, res: Response) => {
+  res.json({ message: "Welcome to FinTrack API" });
 });
 
 app.listen(PORT, () => {

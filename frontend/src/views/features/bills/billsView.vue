@@ -2,10 +2,11 @@
   <v-container fluid class="pa-0">
     <SearchComponent :filters="filters" :on-search-fn="handleSearch" />
 
-    <div class="px-4 d-flex flex-column" style="height: calc(100vh - 180px)">
+    <div class="px-4 pt-2 d-flex flex-column" style="height: calc(100vh - 180px)">
       <div class="d-flex align-center justify-space-between mb-2">
         <v-spacer />
         <h2 class="text-h6 font-weight-bold">Records</h2>
+        <v-spacer />
         <v-btn
           icon="mdi-refresh"
           variant="text"
@@ -87,7 +88,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, defineAsyncComponent, shallowRef, watch, nextTick } from "vue";
+import {
+  ref,
+  computed,
+  onMounted,
+  defineAsyncComponent,
+  shallowRef,
+  watch,
+  nextTick,
+} from "vue";
 import { useBillTypeStore } from "@/stores/billtype.store";
 import type { BillType } from "@/stores/billtype.store";
 import type { BillTypeEntry } from "@/types";

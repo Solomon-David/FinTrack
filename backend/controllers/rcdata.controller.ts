@@ -52,7 +52,7 @@ export const addRCData = async (req: UserRequest, res: Response): Promise<void> 
 export const getRCData = async (req: UserRequest, res: Response): Promise<void> => {
     try {
         const userId = req.user!.userId;
-        const records = await RCData.find({ user: userId }).sort({ date: -1 });
+        const records = await RCData.find({ user: userId }).sort({ date: 1 });
         res.status(200).json({ success: true, data: records });
     } catch (error: any) {
         console.error("Error fetching RC-Data:", error);

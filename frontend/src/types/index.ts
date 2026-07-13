@@ -78,3 +78,13 @@ export interface BillEntry {
   dueEvery?: number;
   remark: string;
 }
+
+export interface PlanEntry {
+  name: string;
+  description?: string;
+  progress: number | null;              // amount saved / put toward the plan so far
+  targetAmount: number | "Unknown" | null; // total amount the plan is aiming for
+  dueDate?: string | null;
+  status?: "Completed" | "In Progress" | "Overdue"; // optional override only
+  currency?: string;
+}

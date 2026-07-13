@@ -1,174 +1,198 @@
-import { Response } from 'express';
-import { UserRequest } from '../interfaces';
-import Summary from '../models/Summary';
-import Income from '../models/Income';
-import Expense from '../models/Expense';
-import RCData from '../models/RCData';
-import Bill from '../models/Bill';
-import Plan from '../models/Plan';
-import User from '../models/User';
-
-type SummaryTimeframe = "Daily" | "Monthly" | "Weekly" | "Yearly";
-type SummarySource = "cron" | "manual";
-const defaultTimeframes: SummaryTimeframe[] = ["Daily", "Weekly", "Monthly", "Yearly"];
+import { Response } from "express";
+import { UserRequest } from "../interfaces";
+import Summary from "../models/Summary";
+import Income from "../models/Income";
+import Expense from "../models/Expense";
+import RCData from "../models/RCData";
+import Bill from "../models/Bill";
+import Plan from "../models/Plan";
+import User from "../models/User";
 
 // Helper to get date range
-const getDateRange = (timeframe: SummaryTimeframe, date: Date, customStart?: Date, customEnd?: Date) => {
-    if (customStart && customEnd) {
-        return { 
-            start: new Date(customStart.getTime()), 
-            end: new Date(customEnd.getTime()) 
-        };
-    }
+const getDateRange = (
+  timeframe: "Daily" | "Monthly" | "Weekly" | "Yearly",
+  date: Date
+) => {
+  const start = new Date(date);
+  const end = new Date(date);
 
-    const start = new Date(date);
-    const end = new Date(date);
+  if (timeframe === "Daily") {
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+  } else if (timeframe === "Weekly") {
+    const day = start.getDay();
+    start.setDate(start.getDate() - day);
+    start.setHours(0, 0, 0, 0);
+    end.setDate(end.getDate() - day + 6);
+    end.setHours(23, 59, 59, 999);
+  } else if (timeframe === "Monthly") {
+    start.setDate(1);
+    start.setHours(0, 0, 0, 0);
+    end.setMonth(end.getMonth() + 1, 0);
+    end.setHours(23, 59, 59, 999);
+  } else if (timeframe === "Yearly") {
+    start.setMonth(0, 1);
+    start.setHours(0, 0, 0, 0);
+    end.setMonth(11, 31);
+    end.setHours(23, 59, 59, 999);
+  }
 
-    if (timeframe === "Daily") {
-        start.setHours(0, 0, 0, 0);
-        end.setHours(23, 59, 59, 999);
-    } else if (timeframe === "Weekly") {
-        end.setHours(23, 59, 59, 999);
-        start.setDate(start.getDate() - 7);
-        start.setHours(0, 0, 0, 0);
-    } else if (timeframe === "Monthly") {
-        start.setDate(1);
-        start.setHours(0, 0, 0, 0);
-        end.setMonth(end.getMonth() + 1, 0);
-        end.setHours(23, 59, 59, 999);
-    } else if (timeframe === "Yearly") {
-        start.setMonth(0, 1);
-        start.setHours(0, 0, 0, 0);
-        end.setMonth(11, 31);
-        end.setHours(23, 59, 59, 999);
-    }
-
-    return { start, end };
+  return { start, end };
 };
 
-// Core summary generator — used by both cron and manual trigger
+// Core summary generator — used by the cron job, summary invalidation, and
+// manual trigger. `persist` controls whether the computed summary is written
+// to the database via upsert (true, the default — used by the cron job and
+// invalidation flows) or just computed and returned without any DB write
+// (false — used for on-demand "preview" generation from the frontend).
 export const generateSummaryForUser = async (
-    userId: string,
-    date: Date = new Date(),
-    timeframe?: SummaryTimeframe,
-    persist: boolean = false,
-    source: SummarySource = "cron",
-    customStartDate?: Date,
-    customEndDate?: Date
+  userId: string,
+  date: Date = new Date(),
+  timeframe?: "Daily" | "Weekly" | "Monthly" | "Yearly",
+  persist: boolean = true
 ) => {
-    const timeframes = timeframe ? [timeframe] : defaultTimeframes;
+  const timeframes = timeframe
+    ? [timeframe]
+    : (["Daily", "Monthly", "Weekly", "Yearly"] as Array<
+        "Daily" | "Monthly" | "Weekly" | "Yearly"
+      >);
 
-    const results: Array<any> = [];
+  const results = [];
 
-    for (const tf of timeframes) {
-        const { start, end } = getDateRange(tf, date, customStartDate, customEndDate);
-        const dateFilter = { user: userId, date: { $gte: start, $lte: end } };
+  for (const tf of timeframes) {
+    const { start, end } = getDateRange(tf, date);
+    const dateFilter = { user: userId, date: { $gte: start, $lte: end } };
 
-        const [incomes, expenses, rcdata, bills, plans] = await Promise.all([
-            Income.find(dateFilter),
-            Expense.find(dateFilter),
-            RCData.find(dateFilter),
-            Bill.find({ user: userId }),
-            Plan.find({ user: userId }),
-        ]);
+    const [incomes, expenses, rcdata, bills, plans] = await Promise.all([
+      Income.find(dateFilter),
+      Expense.find(dateFilter),
+      RCData.find(dateFilter),
+      Bill.find({ user: userId }),
+      Plan.find({ user: userId }),
+    ]);
 
-        const totalIncome = incomes.reduce((s, i) => s + i.amount, 0);
-        const totalExpense = expenses.reduce((s, e) => s + e.amount, 0);
+    const totalIncome = incomes.reduce((s, i) => s + i.amount, 0);
+    const totalExpense = expenses.reduce((s, e) => s + e.amount, 0);
 
-        const totalAirtime = rcdata
-            .filter(r => r.type === "airtime")
-            .reduce((s, r) => s + r.amount.amount, 0);
+    const totalAirtime = rcdata
+      .filter((r) => r.type === "airtime")
+      .reduce((s, r) => s + r.amount.amount, 0);
 
-        const totalDataMB = rcdata
-            .filter(r => r.type === "data")
-            .reduce((s, r) => s + (r.amount.size === "GB" ? r.amount.amount * 1024 : r.amount.amount), 0);
+    const totalDataMB = rcdata
+      .filter((r) => r.type === "data")
+      .reduce(
+        (s, r) => s + (r.amount.size === "GB" ? r.amount.amount * 1024 : r.amount.amount),
+        0
+      );
 
-        const billsPaid = bills.filter(b => b.status === "Paid").length;
-        const billsTotal = bills.length;
-        const billsOverdue = bills.filter(b => b.status === "Overdue").length;
-        const billsAmountDue = bills
-            .filter(b => b.status !== "Paid")
-            .reduce((s, b) => s + b.amount, 0);
+    const billsPaid = bills.filter((b) => b.status === "Paid").length;
+    const billsTotal = bills.length;
+    const billsOverdue = bills.filter((b) => b.status === "Overdue").length;
+    const billsAmountDue = bills
+      .filter((b) => b.status !== "Paid")
+      .reduce((s, b) => s + b.amount, 0);
 
-        const plansTotal = plans.length;
-        const plansCompleted = plans.filter(p => p.status === "Completed").length;
+    const plansTotal = plans.length;
+    const plansCompleted = plans.filter((p) => p.status === "Completed").length;
 
-        const summaryData = {
-            user: userId,
-            timeframe: tf,
-            category: "Income" as const,
-            period: { start, end },
-            data: [
-                { category: "Income", total: totalIncome },
-                { category: "Expenses", total: totalExpense },
-                { category: "Difference", total: totalIncome - totalExpense },
-                { category: "Airtime", total: totalAirtime },
-                { category: "DataMB", total: totalDataMB },
-                { category: "BillsPaid", total: billsPaid },
-                { category: "BillsTotal", total: billsTotal },
-                { category: "BillsOverdue", total: billsOverdue },
-                { category: "BillsAmountDue", total: billsAmountDue },
-                { category: "PlansTotal", total: plansTotal },
-                { category: "PlansCompleted", total: plansCompleted },
-            ],
-        };
+    const summaryData = {
+      user: userId,
+      timeframe: tf,
+      category: "Income" as const,
+      period: { start, end },
+      data: [
+        { category: "Income", total: totalIncome },
+        { category: "Expenses", total: totalExpense },
+        { category: "Difference", total: totalIncome - totalExpense },
+        { category: "Airtime", total: totalAirtime },
+        { category: "DataMB", total: totalDataMB },
+        { category: "BillsPaid", total: billsPaid },
+        { category: "BillsTotal", total: billsTotal },
+        { category: "BillsOverdue", total: billsOverdue },
+        { category: "BillsAmountDue", total: billsAmountDue },
+        { category: "PlansTotal", total: plansTotal },
+        { category: "PlansCompleted", total: plansCompleted },
+      ],
+    };
 
-        const summaryPayload = { ...summaryData, source };
+    let saved;
 
-        const saved = persist
-            ? await Summary.findOneAndUpdate(
-                { user: userId, timeframe: tf, 'period.start': start },
-                { $set: summaryPayload },
-                { upsert: true, new: true }
-            )
-            : summaryPayload;
-
-        results.push(saved);
+    if (persist) {
+      saved = await Summary.findOneAndUpdate(
+        { user: userId, timeframe: tf, "period.start": start },
+        { $set: summaryData },
+        { upsert: true, new: true }
+      );
+    } else {
+      // Preview mode — return a plain object shaped like a saved Summary
+      // document (so the frontend can render it the same way) without
+      // touching the database. Uses a synthetic id since there's no
+      // persisted document to reference.
+      saved = {
+        _id: `preview-${tf}-${start.getTime()}`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        ...summaryData,
+      };
     }
 
-    return results;
+    results.push(saved);
+  }
+
+  return results;
 };
 
 export const getSummaries = async (req: UserRequest, res: Response): Promise<void> => {
-    try {
-        const userId = req.user!.userId;
-        const summaries = await Summary.find({ user: userId, source: "cron" }).sort({ createdAt: -1 });
-        res.status(200).json({ success: true, data: summaries });
-    } catch (error: any) {
-        console.error("Error fetching summaries:", error);
-        res.status(500).json({ message: error.message || "Internal server error", success: false });
-    }
+  try {
+    const userId = req.user!.userId;
+    const summaries = await Summary.find({ user: userId }).sort({ createdAt: -1 });
+    res.status(200).json({ success: true, data: summaries });
+  } catch (error: any) {
+    console.error("Error fetching summaries:", error);
+    res
+      .status(500)
+      .json({ message: error.message || "Internal server error", success: false });
+  }
 };
 
-// Manual trigger endpoint for testing
-export const generateSummaryNow = async (req: UserRequest, res: Response): Promise<void> => {
-    try {
-        const userId = req.user!.userId;
-        const timeframe = req.body?.timeframe as SummaryTimeframe | undefined;
-        const startDate = req.body?.startDate ? new Date(req.body.startDate) : undefined;
-        const endDate = req.body?.endDate ? new Date(req.body.endDate) : undefined;
+// Manual trigger endpoint. Accepts an optional `timeframe` and `date` (ISO
+// string) in the body so the caller can generate a summary for a specific
+// custom period rather than "now". By default this does NOT persist to the
+// database — pass `save: true` explicitly to also write it via upsert.
+export const generateSummaryNow = async (
+  req: UserRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user!.userId;
+    const { date, timeframe, save } = req.body as {
+      date?: string;
+      timeframe?: "Daily" | "Weekly" | "Monthly" | "Yearly";
+      save?: boolean;
+    };
 
-        await Summary.deleteMany({
-            user: userId,
-            $or: [{ source: { $exists: false } }, { source: "manual" }],
-        });
-
-        const results = await generateSummaryForUser(
-            userId, 
-            new Date(), 
-            timeframe, 
-            true, 
-            "manual",
-            startDate,
-            endDate
-        );
-        res.status(200).json({
-            success: true,
-            message: "Summary generated successfully",
-            data: timeframe ? results[0] : results,
-        });
-    } catch (error: any) {
-        console.error("Error generating summary:", error);
-        res.status(500).json({ message: error.message || "Internal server error", success: false });
+    const parsedDate = date ? new Date(date) : new Date();
+    if (isNaN(parsedDate.getTime())) {
+      res.status(400).json({ message: "Invalid date provided", success: false });
+      return;
     }
+
+    const results = await generateSummaryForUser(
+      userId,
+      parsedDate,
+      timeframe,
+      save === true
+    );
+    res.status(200).json({
+      success: true,
+      message:
+        save === true ? "Summary generated successfully" : "Summary preview generated",
+      data: results,
+    });
+  } catch (error: any) {
+    console.error("Error generating summary:", error);
+    res
+      .status(500)
+      .json({ message: error.message || "Internal server error", success: false });
+  }
 };

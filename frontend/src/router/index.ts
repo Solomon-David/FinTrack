@@ -92,8 +92,8 @@ const routes = [
       {
         path: "/plans",
         name: "plans",
-        component: () => import("@views/user/Dashboard.vue"),
-        meta: { title: "home" },
+        component: () => import("@views/features/plans/PlansView.vue"),
+        meta: { title: "Plans" },
       },
       {
         path: "/profile",

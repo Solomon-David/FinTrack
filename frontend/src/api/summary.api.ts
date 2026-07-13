@@ -4,9 +4,9 @@ export async function getSummaries() {
   return axiosInstance.get('/summaries');
 }
 
-export async function generateSummary(timeframe: string, startDate?: Date, endDate?: Date) {
-  const body: any = { timeframe };
-  if (startDate) body.startDate = startDate.toISOString();
-  if (endDate) body.endDate = endDate.toISOString();
-  return axiosInstance.post('/summaries/generate', body);
+// `save` defaults to false so summaries generated on-demand from the
+// frontend are computed and returned for preview only — they are not
+// written to the database unless explicitly requested.
+export async function generateSummary(timeframe: string, date?: string, save: boolean = false) {
+  return axiosInstance.post('/summaries/generate', { timeframe, date, save });
 }

@@ -3,19 +3,21 @@
     <!-- Mobile layout -->
     <v-list-item class="px-0 py-2 d-sm-none">
       <template #prepend>
-        <div class="d-flex flex-column justify-center mr-3">
-          <span class="text-caption text-medium-emphasis">{{ formattedDate }}</span>
+        <div class="d-flex flex-column justify-center">
+          <span class="text-caption">{{ formattedDate }}</span>
           <span class="font-weight-bold text-body-2">₦{{ formattedAmount }}</span>
         </div>
       </template>
 
+      <v-spacer />
+
       <template #append>
-        <div class="d-flex align-center ga-2">
-          <div class="d-flex flex-column align-end">
-            <span class="text-body-2 font-weight-bold">{{ expense.item }}</span>
-            <span class="text-caption text-medium-emphasis">{{
-              expense.vendor?.name
+        <div class="d-flex align-">
+          <div class="d-flex flex-column align-end ga-1 flex-grow-2">
+            <span class="text-caption font-weight-bold text-right">{{
+              expense.item
             }}</span>
+            <span class="text-caption">{{ expense.vendor?.name }}</span>
           </div>
           <v-menu>
             <template #activator="{ props: menuProps }">

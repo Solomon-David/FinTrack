@@ -20,6 +20,14 @@
           />
 
           <v-text-field
+            v-model="entry.item"
+            variant="outlined"
+            label="Item"
+            density="comfortable"
+            :readonly="entry.isBill && !!entry.billTypeId"
+          />
+
+          <v-text-field
             v-model="entry.amount"
             variant="outlined"
             label="Amount (₦)"
@@ -43,14 +51,6 @@
               </v-btn>
             </template>
           </v-text-field>
-
-          <v-text-field
-            v-model="entry.item"
-            variant="outlined"
-            label="Item"
-            density="comfortable"
-            :readonly="entry.isBill && !!entry.billTypeId"
-          />
 
           <v-text-field
             v-model="entry.vendor"
@@ -83,9 +83,11 @@
               <template #item="{ props: itemProps, item }">
                 <v-list-item
                   v-bind="itemProps"
-                  :subtitle="`Paid: ₦${Number(item.amountPaid || 0).toLocaleString('en-NG')} / ₦${Number(
-                    item.total || 0
-                  ).toLocaleString('en-NG')} • ${item.status || ''}`"
+                  :subtitle="`Paid: ₦${Number(item.amountPaid || 0).toLocaleString(
+                    'en-NG'
+                  )} / ₦${Number(item.total || 0).toLocaleString('en-NG')} • ${
+                    item.status || ''
+                  }`"
                 />
               </template>
             </v-select>
@@ -201,7 +203,6 @@ watch(
     }
   }
 );
-
 
 function addEntry() {
   entries.value.push(createEntry());
