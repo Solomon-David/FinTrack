@@ -22,7 +22,9 @@
               </v-icon>
               <div class="d-flex flex-column">
                 <span class="text-body-2 font-weight-bold">{{ type.label }}</span>
-                <span class="text-caption text-medium-emphasis">{{ type.description }}</span>
+                <span class="text-caption text-medium-emphasis">{{
+                  type.description
+                }}</span>
               </div>
               <v-spacer />
               <v-icon v-if="selected === type.label" color="secondary" size="20">
@@ -62,10 +64,21 @@
           </span>
         </div>
 
-        <SummaryItem :summary="preview" @export="handleExport" @delete="() => {}" />
+        <SummaryItem
+          :summary="preview"
+          :type="props.type"
+          @export="handleExport"
+          @delete="() => {}"
+        />
       </template>
 
-      <v-snackbar v-model="snackbar.show" :color="snackbar.color" rounded="lg" timeout="2500" location="bottom">
+      <v-snackbar
+        v-model="snackbar.show"
+        :color="snackbar.color"
+        rounded="lg"
+        timeout="2500"
+        location="bottom"
+      >
         {{ snackbar.message }}
       </v-snackbar>
     </v-container>
@@ -73,7 +86,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from "vue";
+import { ref, reactive, computed, watch } from "vue";
 import { useIncomeStore } from "@/stores/income.store";
 import { useExpenseStore } from "@/stores/expense.store";
 import { useRCDataStore } from "@/stores/rcdata.store";
@@ -83,6 +96,8 @@ import SummaryItem from "@/components/summaries/SummaryItem.vue";
 
 const open = defineModel<boolean>({ required: true });
 
+const props = defineProps<{ type?: "Income" | "Expenses" | "RCData" | undefined }>();
+
 const incomeStore = useIncomeStore();
 const expenseStore = useExpenseStore();
 const rcDataStore = useRCDataStore();
@@ -91,17 +106,17 @@ const types = [
   {
     label: "Daily",
     icon: "mdi-calendar-today",
-    description: "Today's activity",
+    description: "A day's work",
   },
   {
     label: "Weekly",
     icon: "mdi-calendar-week",
-    description: "Last 7 days",
+    description: "The past 7 days",
   },
   {
     label: "Monthly",
     icon: "mdi-calendar-month",
-    description: "This month so far",
+    description: "The month so far",
   },
 ];
 
@@ -109,6 +124,19 @@ const selected = ref<string | null>(null);
 const preview = ref<Summary | null>(null);
 const loading = ref(false);
 const snackbar = reactive({ show: false, message: "", color: "success" });
+
+function resetDialog() {
+  selected.value = null;
+  preview.value = null;
+  loading.value = false;
+  snackbar.show = false;
+}
+
+watch(open, (isOpen) => {
+  if (!isOpen) {
+    resetDialog();
+  }
+});
 
 function showSnackbar(message: string, color: string) {
   snackbar.message = message;
@@ -140,7 +168,8 @@ function getDateRange(type: string): { start: Date; end: Date } {
 const periodRangeLabel = computed(() => {
   if (!selected.value) return "";
   const { start, end } = getDateRange(selected.value);
-  const fmt = (d: Date) => d.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const fmt = (d: Date) =>
+    d.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
   if (selected.value === "Daily") return fmt(start);
   return `${fmt(start)} — ${fmt(end)}`;
 });
@@ -165,21 +194,24 @@ async function generate() {
     const { start, end } = getDateRange(selected.value);
 
     // Filter records to the date range
-    const incomes = incomeStore.incomes.filter(i => inRange(i.date, start, end));
-    const expenses = expenseStore.expenses.filter(e => inRange(e.date, start, end));
-    const rcdata = rcDataStore.records.filter(r => inRange(r.date, start, end));
+    const incomes = incomeStore.incomes.filter((i) => inRange(i.date, start, end));
+    const expenses = expenseStore.expenses.filter((e) => inRange(e.date, start, end));
+    const rcdata = rcDataStore.records.filter((r) => inRange(r.date, start, end));
 
     // Compute totals
     const totalIncome = incomes.reduce((s, i) => s + i.amount, 0);
     const totalExpense = expenses.reduce((s, e) => s + e.amount, 0);
 
     const totalAirtime = rcdata
-      .filter(r => r.type === "airtime")
+      .filter((r) => r.type === "airtime")
       .reduce((s, r) => s + r.amount.amount, 0);
 
     const totalDataMB = rcdata
-      .filter(r => r.type === "data")
-      .reduce((s, r) => s + (r.amount.size === "GB" ? r.amount.amount * 1024 : r.amount.amount), 0);
+      .filter((r) => r.type === "data")
+      .reduce(
+        (s, r) => s + (r.amount.size === "GB" ? r.amount.amount * 1024 : r.amount.amount),
+        0
+      );
 
     // Build a Summary-shaped object for SummaryItem
     preview.value = {
@@ -190,11 +222,11 @@ async function generate() {
       currency: "NGN",
       period: { start: start.toISOString(), end: end.toISOString() },
       data: [
-        { category: "Income",     total: totalIncome },
-        { category: "Expenses",   total: totalExpense },
+        { category: "Income", total: totalIncome },
+        { category: "Expenses", total: totalExpense },
         { category: "Difference", total: totalIncome - totalExpense },
-        { category: "Airtime",    total: totalAirtime },
-        { category: "DataMB",     total: totalDataMB },
+        { category: "Airtime", total: totalAirtime },
+        { category: "DataMB", total: totalDataMB },
       ],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),

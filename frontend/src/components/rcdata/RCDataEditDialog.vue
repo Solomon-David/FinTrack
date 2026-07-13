@@ -202,6 +202,22 @@ watch(
   { immediate: true }
 );
 
+watch(open, (isOpen) => {
+  if (!isOpen) {
+    form.date = "";
+    form.type = "airtime";
+    form.network = "MTN";
+    form.senderName = "";
+    form.senderPhone = "";
+    form.amountValue = null;
+    form.size = "GB";
+    form.currency = "NGN";
+    form.remark = "";
+    snackbar.show = false;
+  }
+});
+
+
 async function submit() {
   const { valid } = await formRef.value.validate();
   if (!valid || !props.record) return;

@@ -10,7 +10,7 @@ export interface SummaryDataEntry {
 export interface Summary {
   _id: string;
   user: string;
-  timeframe: "Daily" | "Monthly" | "Yearly";
+  timeframe: "Daily" | "Weekly" | "Monthly" | "Yearly";
   category: string;
   data: SummaryDataEntry[];
   currency: string;

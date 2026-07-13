@@ -41,11 +41,15 @@
       </div>
     </div>
 
+    <!-- Generate Summary button -->
     <div class="d-flex justify-center mt-4 mb-6">
-      <v-btn color="secondary" variant="flat" rounded="xl" :to="{ name: 'summaries' }">
+      <v-btn color="secondary" variant="flat" rounded="xl" @click="generateDialog = true">
         Summaries
       </v-btn>
     </div>
+
+    <!-- Generate Summary Dialog -->
+    <GenerateSummaryDialog v-model="generateDialog" type="Expenses" />
 
     <v-btn
       icon="mdi-plus"
@@ -104,12 +108,14 @@ import ExpenseItem from "@/components/expenses/ExpenseItem.vue";
 import SearchComponent from "@/components/shared/SearchComponent.vue";
 import ExpenseEditDialog from "@/components/expenses/ExpenseEditDialog.vue";
 import LoadingDialog from "@/components/shared/LoadingDialog.vue";
+import GenerateSummaryDialog from "@/components/summaries/GenerateSummaryDialog.vue";
 
 const expenseStore = useExpenseStore();
 
 const addDialog = ref(false);
 const editDialog = ref(false);
 const deleteDialog = ref(false);
+const generateDialog = ref(false);
 const selectedExpense = ref<Expense | null>(null);
 const duplicateEntry = ref<Partial<ExpenseEntry> | undefined>(undefined);
 const searchQuery = ref("");

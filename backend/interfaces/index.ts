@@ -140,6 +140,7 @@ export interface ISummary extends GenericDocument {
   }>;
   currency: string;
   period: IDataRange;
+  source?: "cron" | "manual";
 }
 
 export interface IDataRange {

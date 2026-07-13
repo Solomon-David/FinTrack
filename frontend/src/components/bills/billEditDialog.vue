@@ -233,6 +233,21 @@ watch(
   { immediate: true }
 );
 
+watch(open, (isOpen) => {
+  if (!isOpen) {
+    form.name = "";
+    form.type = "Other";
+    form.total = null;
+    form.currency = "NGN";
+    form.recurrence = "Monthly";
+    form.dueEvery = undefined;
+    form.remark = "";
+    form.markOverdue = false;
+    snackbar.show = false;
+  }
+});
+
+
 async function submit() {
   const { valid } = await formRef.value.validate();
   if (!valid || !props.bill) return;

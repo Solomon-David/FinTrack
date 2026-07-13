@@ -14,6 +14,6 @@ export const touchSummariesForDate = async (userId: string, date: Date) => {
     });
 
     for (const summary of affected) {
-        await generateSummaryForUser(userId, summary.period.start, summary.timeframe);
+        await generateSummaryForUser(userId, summary.period.start, summary.timeframe, true, "cron");
     }
 };

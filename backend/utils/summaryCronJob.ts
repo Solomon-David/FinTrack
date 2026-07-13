@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import User from '../models/User';
 import BillType from '../models/BillType';
+import Summary from '../models/Summary';
 import { generateSummaryForUser } from '../controllers/summary.controller';
 import { computeNextDueDate } from './computeDueDate';
 
@@ -8,9 +9,14 @@ const runSummaryJob = async (label: string) => {
     console.log(`[${new Date().toISOString()}] ${label} summary job running...`);
     try {
         const users = await User.find({}).select('_id').lean();
+        const timeframe = label as "Daily" | "Weekly" | "Monthly" | "Yearly";
         for (const user of users) {
             const userId = user._id.toString();
-            const results = await generateSummaryForUser(userId);
+            await Summary.deleteMany({
+                user: user._id,
+                $or: [{ source: { $exists: false } }, { source: "manual" }],
+            });
+            const results = await generateSummaryForUser(userId, new Date(), timeframe, true, "cron");
             console.log(`Summary created for user ${userId}:`,
                 results.map(r => `${r.timeframe}: Income=${r.data.find(d => d.category === 'Income')?.total}`)
             );

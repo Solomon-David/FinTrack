@@ -1,6 +1,6 @@
 <template>
   <v-container fluid class="pa-0">
-    <SearchComponent :filters="summaryCategories" :on-search-fn="handleSearch" />
+    <SearchComponent :filters="availableFilters" :on-search-fn="handleSearch" />
 
     <div class="px-4 d-flex flex-column" style="height: calc(100vh - 180px)">
       <div class="d-flex align-center justify-center mb-2 position-relative">
@@ -17,7 +17,7 @@
         />
       </div>
 
-      <div class="overflow-y-auto flex-grow-1">
+      <div ref="listContainer" class="overflow-y-auto flex-grow-1">
         <div
           v-if="!summaryStore.isLoading && filteredSummaries.length === 0"
           class="text-center py-10"
@@ -72,7 +72,7 @@
           records.
         </v-card-text>
         <v-row dense>
-          <v-col v-for="type in summaryTypes" :key="type" cols="6">
+          <v-col v-for="type in availableFilters" :key="type" cols="6">
             <v-btn
               :color="selectedType === type ? 'secondary' : 'default'"
               :variant="selectedType === type ? 'flat' : 'outlined'"
@@ -128,14 +128,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted } from "vue";
+import { ref, computed, reactive, onMounted, watch, nextTick } from "vue";
 import { useSummaryStore } from "@/stores/summary.store";
 import type { Summary } from "@/stores/summary.store";
 import SummaryItem from "@/components/summaries/SummaryItem.vue";
 import GenerateSummaryDialog from "@/components/summaries/GenerateSummaryDialog.vue";
 import SearchComponent from "@/components/shared/SearchComponent.vue";
 
+const props = defineProps<{ filter?: string[] | null }>();
+const emit = defineEmits<{ "filter-change": [filter: string | null] }>();
+
 const summaryStore = useSummaryStore();
+
+const listContainer = ref<HTMLElement | null>(null);
 
 const deleteDialog = ref(false);
 const instantDialog = ref(false);
@@ -144,26 +149,38 @@ const selectedSummary = ref<Summary | null>(null);
 const selectedType = ref<string | null>(null);
 const searchQuery = ref("");
 const searchCategory = ref<string | null>(null);
+const activeFilter = ref<string | null>(null);
 const snackbar = reactive({ show: false, message: "", color: "success" });
 
-const summaryTypes = ["Daily", "Weekly", "Monthly", "Yearly"];
-const summaryCategories = ["Daily", "Weekly", "Monthly", "Yearly"];
-
-onMounted(() => load());
+const summaryFilters = ["Daily", "Weekly", "Monthly", "Yearly"];
+const availableFilters = computed(() =>
+  props.filter?.length ? props.filter : summaryFilters
+);
 
 async function load() {
   await summaryStore.getSummaries();
 }
 
+// helper: get ISO week number
+function getISOWeek(date: Date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+  return weekNo;
+}
+
 const filteredSummaries = computed(() => {
   let results = summaryStore.summaries;
+  const categoryToFilter = searchCategory.value ?? activeFilter.value;
 
   // Category filter — filter by timeframe
-  if (searchCategory.value) {
-    results = results.filter((s) => s.timeframe === searchCategory.value);
+  if (categoryToFilter) {
+    results = results.filter((s) => s.timeframe === categoryToFilter);
   }
 
-  // Search filter — match against period dates
+  // Search filter — match against period dates (include weeks)
   const q = searchQuery.value.trim();
   if (!q) return results;
 
@@ -175,13 +192,27 @@ const filteredSummaries = computed(() => {
       "0"
     )}/${start.getFullYear()}`;
     const year = `${start.getFullYear()}`;
-    return full.includes(q) || monthYear.includes(q) || year.includes(q);
+    const week = String(getISOWeek(start)).padStart(2, "0");
+    const weekYear = `W${week}/${start.getFullYear()}`;
+    return (
+      full.includes(q) ||
+      monthYear.includes(q) ||
+      year.includes(q) ||
+      weekYear.includes(q) ||
+      week.includes(q)
+    );
   });
 });
 
-function handleSearch(query: string, _filter: string, category: string | null) {
+function applyFilter(filter: string | null) {
+  activeFilter.value = filter;
+  emit("filter-change", filter);
+}
+
+function handleSearch(query: string, selectedFilter: string) {
   searchQuery.value = query;
-  searchCategory.value = category;
+  searchCategory.value = selectedFilter || null;
+  applyFilter(selectedFilter || null);
 }
 
 async function handleGenerate() {
@@ -193,6 +224,7 @@ async function handleGenerate() {
     snackbar.message = `${selectedType.value} summary generated successfully!`;
     snackbar.color = "success";
     generateDialog.value = false;
+    applyFilter(selectedType.value);
     selectedType.value = null;
   } catch {
     snackbar.message = "Failed to generate summary.";
@@ -201,4 +233,31 @@ async function handleGenerate() {
     snackbar.show = true;
   }
 }
+
+async function handleDelete() {
+  if (!selectedSummary.value) return;
+  await summaryStore.deleteSummary(selectedSummary.value._id);
+  deleteDialog.value = false;
+  selectedSummary.value = null;
+}
+
+function scrollToEnd() {
+  nextTick(() => {
+    const el = listContainer.value;
+    if (el) el.scrollTop = el.scrollHeight;
+  });
+}
+
+// to automatically scroll to the end
+watch(
+  filteredSummaries,
+  () => {
+    scrollToEnd();
+  },
+  { deep: true }
+);
+
+onMounted(() => {
+  load().then(scrollToEnd);
+});
 </script>

@@ -26,6 +26,7 @@ const SummarySchema: Schema<ISummary> = new Schema(
     data: { type: [SummaryDataEntrySchema], required: true },
     currency: { type: String },
     period: { type: DataRangeSchema, required: true },
+    source: { type: String, enum: ["cron", "manual"], default: "cron" },
   },
   { timestamps: true }
 );

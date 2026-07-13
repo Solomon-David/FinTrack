@@ -156,9 +156,13 @@ watch(
   ([isOpen]) => {
     if (isOpen) {
       resetEntries();
+    } else {
+      resetEntries();
+      snackbar.show = false;
     }
   }
 );
+
 
 function addEntry() {
   entries.value.push(createEntry());

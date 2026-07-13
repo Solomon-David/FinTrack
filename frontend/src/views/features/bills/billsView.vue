@@ -16,7 +16,7 @@
         />
       </div>
 
-      <div class="overflow-y-auto flex-grow-1">
+      <div ref="listContainer" class="overflow-y-auto flex-grow-1">
         <BillItem
           v-for="bill in filteredBills"
           :key="bill._id"
@@ -87,7 +87,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, defineAsyncComponent, shallowRef, watch } from "vue";
+import { ref, computed, onMounted, defineAsyncComponent, shallowRef, watch, nextTick } from "vue";
 import { useBillTypeStore } from "@/stores/billtype.store";
 import type { BillType } from "@/stores/billtype.store";
 import type { BillTypeEntry } from "@/types";
@@ -97,6 +97,8 @@ import SearchComponent from "@/components/shared/SearchComponent.vue";
 import LoadingDialog from "@/components/shared/LoadingDialog.vue";
 
 const billTypeStore = useBillTypeStore();
+
+const listContainer = ref<HTMLElement | null>(null);
 
 const addDialog = ref(false);
 const editDialog = ref(false);
@@ -148,8 +150,6 @@ watch(addDialog, (isOpen) => {
   if (!isOpen) duplicateEntry.value = undefined;
 });
 
-onMounted(() => load());
-
 async function load() {
   await billTypeStore.getBillTypes();
 }
@@ -187,4 +187,24 @@ async function handleDelete() {
   deleteDialog.value = false;
   selectedBill.value = null;
 }
+
+function scrollToEnd() {
+  nextTick(() => {
+    const el = listContainer.value;
+    if (el) el.scrollTop = el.scrollHeight;
+  });
+}
+
+// to automatically scroll to the end
+watch(
+  filteredBills,
+  () => {
+    scrollToEnd();
+  },
+  { deep: true }
+);
+
+onMounted(() => {
+  load().then(scrollToEnd);
+});
 </script>

@@ -199,8 +199,13 @@ watch(
   () => [open.value, props.initialEntry],
   ([isOpen]) => {
     if (isOpen) entries.value = [createEntry()];
+    else {
+      entries.value = [createEntry()];
+      snackbar.show = false;
+    }
   }
 );
+
 
 function addEntry() {
   entries.value.push(createEntry());

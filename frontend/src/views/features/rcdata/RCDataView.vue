@@ -16,7 +16,7 @@
         />
       </div>
 
-      <div class="overflow-y-auto flex-grow-1">
+      <div ref="listContainer" class="overflow-y-auto flex-grow-1">
         <div v-for="(group, date) in groupedRecords" :key="date" class="mb-4">
           <RCDataItem
             v-for="record in group"
@@ -42,10 +42,13 @@
     </div>
 
     <div class="d-flex justify-center mt-4 mb-6">
-      <v-btn color="secondary" variant="flat" rounded="xl" :to="{ name: 'summaries' }">
+      <v-btn color="secondary" variant="flat" rounded="xl" @click="generateDialog = true">
         Summaries
       </v-btn>
     </div>
+
+    <!-- Generate Summary Dialog -->
+    <GenerateSummaryDialog v-model="generateDialog" type="RCData" />
 
     <v-btn
       icon="mdi-plus"
@@ -88,7 +91,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, defineAsyncComponent, shallowRef, watch } from "vue";
+import {
+  ref,
+  computed,
+  onMounted,
+  defineAsyncComponent,
+  shallowRef,
+  watch,
+  nextTick,
+} from "vue";
 import { useRCDataStore } from "@/stores/rcdata.store";
 import type { RCData } from "@/stores/rcdata.store";
 import type { RCDataEntry } from "@/types";
@@ -96,12 +107,16 @@ import RCDataItem from "@/components/rcdata/RCDataItem.vue";
 import RCDataEditDialog from "@/components/rcdata/RCDataEditDialog.vue";
 import SearchComponent from "@/components/shared/SearchComponent.vue";
 import LoadingDialog from "@/components/shared/LoadingDialog.vue";
+import GenerateSummaryDialog from "@/components/summaries/GenerateSummaryDialog.vue";
 
 const rcDataStore = useRCDataStore();
+
+const listContainer = ref<HTMLElement | null>(null);
 
 const addDialog = ref(false);
 const editDialog = ref(false);
 const deleteDialog = ref(false);
+const generateDialog = ref(false);
 const selectedRecord = ref<RCData | null>(null);
 const duplicateEntry = ref<Partial<RCDataEntry> | undefined>(undefined);
 const searchQuery = ref("");
@@ -146,8 +161,6 @@ function openDuplicate(record: RCData) {
 watch(addDialog, (isOpen) => {
   if (!isOpen) duplicateEntry.value = undefined;
 });
-
-onMounted(() => load());
 
 async function load() {
   await rcDataStore.getRCData();
@@ -223,4 +236,24 @@ async function handleDelete() {
   deleteDialog.value = false;
   selectedRecord.value = null;
 }
+
+function scrollToEnd() {
+  nextTick(() => {
+    const el = listContainer.value;
+    if (el) el.scrollTop = el.scrollHeight;
+  });
+}
+
+// to automatically scroll to the end
+watch(
+  filteredRecords,
+  () => {
+    scrollToEnd();
+  },
+  { deep: true }
+);
+
+onMounted(() => {
+  load().then(scrollToEnd);
+});
 </script>

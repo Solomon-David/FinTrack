@@ -134,6 +134,19 @@ watch(
   { immediate: true }
 );
 
+watch(open, (isOpen) => {
+  if (!isOpen) {
+    form.date = "";
+    form.amount = null;
+    form.item = "";
+    form.vendor = "";
+    form.isBill = false;
+    form.currency = "NGN";
+    snackbar.show = false;
+  }
+});
+
+
 async function submit() {
   const { valid } = await formRef.value.validate();
   if (!valid || !props.expense) return;

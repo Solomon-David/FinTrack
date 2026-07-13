@@ -8,8 +8,12 @@ import Bill from '../models/Bill';
 import Plan from '../models/Plan';
 import User from '../models/User';
 
+type SummaryTimeframe = "Daily" | "Monthly" | "Weekly" | "Yearly";
+type SummarySource = "cron" | "manual";
+const defaultTimeframes: SummaryTimeframe[] = ["Daily", "Weekly", "Monthly", "Yearly"];
+
 // Helper to get date range
-const getDateRange = (timeframe: "Daily" | "Monthly" | "Weekly" | "Yearly", date: Date) => {
+const getDateRange = (timeframe: SummaryTimeframe, date: Date) => {
     const start = new Date(date);
     const end = new Date(date);
 
@@ -41,13 +45,13 @@ const getDateRange = (timeframe: "Daily" | "Monthly" | "Weekly" | "Yearly", date
 export const generateSummaryForUser = async (
     userId: string,
     date: Date = new Date(),
-    timeframe?: "Daily" | "Weekly" | "Monthly" | "Yearly"
+    timeframe?: SummaryTimeframe,
+    persist: boolean = false,
+    source: SummarySource = "cron"
 ) => {
-    const timeframes = timeframe
-        ? [timeframe]
-        : ["Daily", "Monthly", "Weekly", "Yearly"] as Array<"Daily" | "Monthly" | "Weekly" | "Yearly">;
+    const timeframes = timeframe ? [timeframe] : defaultTimeframes;
 
-    const results = [];
+    const results: Array<any> = [];
 
     for (const tf of timeframes) {
         const { start, end } = getDateRange(tf, date);
@@ -102,11 +106,15 @@ export const generateSummaryForUser = async (
             ],
         };
 
-        const saved = await Summary.findOneAndUpdate(
-            { user: userId, timeframe: tf, 'period.start': start },
-            { $set: summaryData },
-            { upsert: true, new: true }
-        );
+        const summaryPayload = { ...summaryData, source };
+
+        const saved = persist
+            ? await Summary.findOneAndUpdate(
+                { user: userId, timeframe: tf, 'period.start': start },
+                { $set: summaryPayload },
+                { upsert: true, new: true }
+            )
+            : summaryPayload;
 
         results.push(saved);
     }
@@ -117,7 +125,7 @@ export const generateSummaryForUser = async (
 export const getSummaries = async (req: UserRequest, res: Response): Promise<void> => {
     try {
         const userId = req.user!.userId;
-        const summaries = await Summary.find({ user: userId }).sort({ createdAt: -1 });
+        const summaries = await Summary.find({ user: userId, source: "cron" }).sort({ createdAt: -1 });
         res.status(200).json({ success: true, data: summaries });
     } catch (error: any) {
         console.error("Error fetching summaries:", error);
@@ -129,11 +137,18 @@ export const getSummaries = async (req: UserRequest, res: Response): Promise<voi
 export const generateSummaryNow = async (req: UserRequest, res: Response): Promise<void> => {
     try {
         const userId = req.user!.userId;
-        const results = await generateSummaryForUser(userId);
+        const timeframe = req.body?.timeframe as SummaryTimeframe | undefined;
+
+        await Summary.deleteMany({
+            user: userId,
+            $or: [{ source: { $exists: false } }, { source: "manual" }],
+        });
+
+        const results = await generateSummaryForUser(userId, new Date(), timeframe, false, "manual");
         res.status(200).json({
             success: true,
             message: "Summary generated successfully",
-            data: results,
+            data: timeframe ? results[0] : results,
         });
     } catch (error: any) {
         console.error("Error generating summary:", error);
