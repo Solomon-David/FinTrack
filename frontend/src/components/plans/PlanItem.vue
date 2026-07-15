@@ -16,12 +16,30 @@
           </div>
           <v-menu>
             <template #activator="{ props: menuProps }">
-              <v-btn icon="mdi-dots-vertical" size="x-small" variant="text" v-bind="menuProps" />
+              <v-btn
+                icon="mdi-dots-vertical"
+                size="x-small"
+                variant="text"
+                v-bind="menuProps"
+              />
             </template>
             <v-list density="compact" rounded="lg" min-width="140">
-              <v-list-item prepend-icon="mdi-pencil-outline" title="Edit" @click="emit('edit', plan)" />
-              <v-list-item prepend-icon="mdi-content-copy" title="Duplicate" @click="emit('duplicate', plan)" />
-              <v-list-item prepend-icon="mdi-delete-outline" title="Delete" base-color="error" @click="emit('delete', plan)" />
+              <v-list-item
+                prepend-icon="mdi-pencil-outline"
+                title="Edit"
+                @click="emit('edit', plan)"
+              />
+              <v-list-item
+                prepend-icon="mdi-content-copy"
+                title="Duplicate"
+                @click="emit('duplicate', plan)"
+              />
+              <v-list-item
+                prepend-icon="mdi-delete-outline"
+                title="Delete"
+                base-color="error"
+                @click="emit('delete', plan)"
+              />
             </v-list>
           </v-menu>
         </div>
@@ -66,12 +84,30 @@
       <v-col cols="2" class="d-flex justify-end">
         <v-menu>
           <template #activator="{ props: menuProps }">
-            <v-btn icon="mdi-dots-vertical" size="x-small" variant="text" v-bind="menuProps" />
+            <v-btn
+              icon="mdi-dots-vertical"
+              size="x-small"
+              variant="text"
+              v-bind="menuProps"
+            />
           </template>
           <v-list density="compact" rounded="lg" min-width="140">
-            <v-list-item prepend-icon="mdi-pencil-outline" title="Edit" @click="emit('edit', plan)" />
-            <v-list-item prepend-icon="mdi-content-copy" title="Duplicate" @click="emit('duplicate', plan)" />
-            <v-list-item prepend-icon="mdi-delete-outline" title="Delete" base-color="error" @click="emit('delete', plan)" />
+            <v-list-item
+              prepend-icon="mdi-pencil-outline"
+              title="Edit"
+              @click="emit('edit', plan)"
+            />
+            <v-list-item
+              prepend-icon="mdi-content-copy"
+              title="Duplicate"
+              @click="emit('duplicate', plan)"
+            />
+            <v-list-item
+              prepend-icon="mdi-delete-outline"
+              title="Delete"
+              base-color="error"
+              @click="emit('delete', plan)"
+            />
           </v-list>
         </v-menu>
       </v-col>
