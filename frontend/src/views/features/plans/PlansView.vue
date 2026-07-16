@@ -2,11 +2,11 @@
   <v-container fluid class="pa-0">
     <SearchComponent :filters="filters" :on-search-fn="handleSearch" />
 
-    <div class="px-4 pt-2 d-flex flex-column" style="height: calc(100vh - 180px)">
+    <div class="px-4 d-flex flex-column" style="height: calc(100vh - 180px)">
       <div class="d-flex align-center justify-space-between mb-2">
         <v-spacer />
         <h2 class="text-h6 font-weight-bold">Plans</h2>
-        <v-spacer />
+        <v-spacer></v-spacer>
         <v-btn
           icon="mdi-refresh"
           variant="text"
@@ -26,6 +26,7 @@
             v-for="plan in group"
             :key="plan._id"
             :plan="plan"
+            @update="openUpdateAmount"
             @edit="openEdit"
             @duplicate="openDuplicate"
             @delete="confirmDelete"
@@ -67,6 +68,12 @@
 
     <PlanEditDialog v-model="editDialog" :plan="selectedPlan" @updated="load" />
 
+    <PlanUpdateAmountDialog
+      v-model="updateAmountDialog"
+      :plan="selectedPlan"
+      @updated="load"
+    />
+
     <v-dialog v-model="deleteDialog" max-width="300">
       <v-card rounded="lg" class="pa-4">
         <v-card-title class="text-body-1 font-weight-bold">Delete Plan</v-card-title>
@@ -95,6 +102,7 @@ import type { Plan } from "@/stores/plan.store";
 import type { PlanEntry } from "@/types";
 import PlanItem from "@/components/plans/PlanItem.vue";
 import PlanEditDialog from "@/components/plans/PlanEditDialog.vue";
+import PlanUpdateAmountDialog from "@/components/plans/PlanUpdateAmountDialog.vue";
 import SearchComponent from "@/components/shared/SearchComponent.vue";
 import LoadingDialog from "@/components/shared/LoadingDialog.vue";
 
@@ -102,6 +110,7 @@ const planStore = usePlanStore();
 
 const addDialog = ref(false);
 const editDialog = ref(false);
+const updateAmountDialog = ref(false);
 const deleteDialog = ref(false);
 const selectedPlan = ref<Plan | null>(null);
 const duplicateEntry = ref<Partial<PlanEntry> | undefined>(undefined);
@@ -195,6 +204,11 @@ const groupedPlans = computed(() => {
 function handleSearch(query: string, filter: string) {
   searchQuery.value = query;
   searchFilter.value = filter;
+}
+
+function openUpdateAmount(plan: Plan) {
+  selectedPlan.value = plan;
+  updateAmountDialog.value = true;
 }
 
 function openEdit(plan: Plan) {

@@ -6,6 +6,7 @@
       <div class="d-flex align-center justify-space-between mb-2">
         <v-spacer />
         <h2 class="text-h6 font-weight-bold">Records</h2>
+        <v-spacer />
         <v-btn
           icon="mdi-refresh"
           variant="text"
