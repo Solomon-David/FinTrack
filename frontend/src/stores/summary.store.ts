@@ -10,7 +10,7 @@ export interface SummaryDataEntry {
 export interface Summary {
   _id: string;
   user: string;
-  timeframe: "Daily" | "Monthly" | "Yearly";
+  timeframe: "Daily" | "Weekly" | "Monthly" | "Yearly";
   category: string;
   data: SummaryDataEntry[];
   currency: string;
@@ -51,8 +51,6 @@ export const useSummaryStore = defineStore('summary', () => {
     error.value = null;
     try {
       const response = await summaryApi.generateSummary(timeframe, date);
-      // The backend returns an array of results (one per requested timeframe);
-      // since we always pass a single timeframe here, take the first entry.
       const results = response.data.data as Summary[];
       const summary = Array.isArray(results) ? results[0] : (results as unknown as Summary);
       return summary;
@@ -65,7 +63,6 @@ export const useSummaryStore = defineStore('summary', () => {
     }
   }
 
-  // Helper getters for display
   const get = (summary: Summary, category: string) =>
     summary.data.find(d => d.category === category)?.total ?? 0;
 

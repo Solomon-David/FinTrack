@@ -37,18 +37,20 @@ const router = useRouter();
 const routeTitle = ref<string | undefined>(route.meta.title as string | undefined);
 const isLoading = ref(false);
 
-const titleTxt = computed(() => `${routeTitle?.value.charAt(0).toLocaleUpperCase()}${routeTitle?.value.substring(
-    1
-  )}`);
+const titleTxt = computed(() => {
+  const title = routeTitle.value;
+  if (!title) return "";
+  return `${title.charAt(0).toLocaleUpperCase()}${title.substring(1)}`;
+});
 
 watch(
   () => route.meta.title,
   (title: unknown) => {
-    let titleStr = typeof title === "string" ? title : null;
+    const titleStr = typeof title === "string" ? title : undefined;
     document.title = titleStr
       ? `${titleStr.charAt(0).toUpperCase() + titleStr.slice(1)} | FinTrack`
       : "FinTrack";
-    routeTitle.value = title;
+    routeTitle.value = titleStr;
   },
   { immediate: true }
 );

@@ -2,11 +2,10 @@
   <v-container fluid class="pa-0">
     <SearchComponent :filters="summaryCategories" :on-search-fn="handleSearch" />
 
-    <div class="px-4 pt-2 d-flex flex-column" style="height: calc(100vh - 180px)">
-      <div class="d-flex align-center justify-center mb-2">
-        <v-spacer />
+    <div class="px-4 d-flex flex-column" style="height: calc(100vh - 180px)">
+      <div class="d-flex align-center justify-center mb-2 position-relative">
         <h2 class="text-h6 font-weight-bold">Records</h2>
-        <v-spacer />
+        <v-spacer/>
         <v-btn
           icon="mdi-refresh"
           variant="text"
@@ -40,18 +39,11 @@
 
     <!-- Action buttons -->
     <div class="d-flex justify-center ga-3 mt-4 mb-6">
-      <v-btn
-        color="secondary"
-        class="text-caption text-uppercase"
-        variant="tonal"
-        rounded="xl"
-        @click="instantDialog = true"
-      >
+      <v-btn color="secondary" variant="tonal" rounded="xl" @click="instantDialog = true">
         Instant Summary
       </v-btn>
       <v-btn
         color="secondary"
-        class="text-caption text-uppercase"
         variant="flat"
         rounded="xl"
         :loading="summaryStore.isGenerating"
@@ -73,8 +65,8 @@
             >Generate Summary</v-card-title
           >
           <v-card-text class="pa-0 text-body-2 text-medium-emphasis mb-4">
-            This will generate a summary for the selected period and show it here. It
-            won't be saved to your records.
+            This will generate a summary for the selected period and show it
+            here. It won't be saved to your records.
           </v-card-text>
           <v-row dense>
             <v-col v-for="type in summaryTypes" :key="type" cols="6">
@@ -268,9 +260,12 @@ const filteredSummaries = computed(() => {
   });
 });
 
-function handleSearch(query: string, _filter: string, category: string | null) {
+// SearchComponent's onSearchFn is a (query, filter) => void callback; the
+// "filter" it passes here IS the selected category (Daily/Weekly/Monthly/
+// Yearly), since that's what summaryCategories contains.
+function handleSearch(query: string, filter: string) {
   searchQuery.value = query;
-  searchCategory.value = category;
+  searchCategory.value = filter || null;
 }
 
 // Reset the picked period whenever the timeframe changes so a stale value

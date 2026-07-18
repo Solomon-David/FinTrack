@@ -4,12 +4,12 @@
     <SearchComponent :filters="filters" :on-search-fn="handleSearch" />
 
     <!-- Records -->
-    <div class="px-4 pt-2 d-flex flex-column" style="height: 55vh">
+    <div class="px-4 d-flex flex-column" style="height: 55vh">
       <div class="d-flex align-center justify-space-between mb-2">
         <v-spacer />
         <h2 class="text-h6 font-weight-bold">Records</h2>
         <v-spacer />
-        <v-btn 
+        <v-btn
           icon="mdi-refresh"
           variant="text"
           size="small"
@@ -20,7 +20,7 @@
       </div>
 
       <!-- Scrollable list -->
-      <div ref="listContainer" class="overflow-y-auto flex-grow-1 bg-bluegrey">
+      <div class="overflow-y-auto flex-grow-1 bg-bluegrey">
         <div v-for="(group, date) in groupedIncomes" :key="date" class="mb-4">
           <IncomeItem
             v-for="income in group"
@@ -46,15 +46,12 @@
       </div>
     </div>
 
-    <!-- Generate Summary button -->
+    <!-- Summaries button -->
     <div class="d-flex justify-center mt-4 mb-6">
-      <v-btn color="secondary" variant="flat" rounded="lg" @click="generateDialog = true">
+      <v-btn color="secondary" variant="flat" rounded="lg" :to="{ name: 'summaries' }">
         Summaries
       </v-btn>
     </div>
-
-    <!-- Generate Summary Dialog -->
-    <GenerateSummaryDialog v-model="generateDialog" type="Income" />
 
     <!-- Floating Action Button -->
     <v-btn
@@ -100,7 +97,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, defineAsyncComponent, shallowRef, watch, nextTick } from "vue";
+import { ref, computed, onMounted, defineAsyncComponent, shallowRef, watch } from "vue";
 import { useIncomeStore } from "@/stores/income.store";
 import type { Income } from "@/stores/income.store";
 import type { IncomeEntry } from "@/types";
@@ -108,16 +105,12 @@ import IncomeItem from "@/components/income/IncomeItem.vue";
 import SearchComponent from "@/components/shared/SearchComponent.vue";
 import IncomeEditDialog from "@/components/income/IncomeEditDialog.vue";
 import LoadingDialog from "@/components/shared/LoadingDialog.vue";
-import GenerateSummaryDialog from "@/components/summaries/GenerateSummaryDialog.vue";
 
 const incomeStore = useIncomeStore();
-
-const listContainer = ref<HTMLElement | null>(null);
 
 const addDialog = ref(false);
 const editDialog = ref(false);
 const deleteDialog = ref(false);
-const generateDialog = ref(false);
 const selectedIncome = ref<Income | null>(null);
 const duplicateEntry = ref<Partial<IncomeEntry> | undefined>(undefined);
 const searchQuery = ref("");
@@ -125,7 +118,10 @@ const searchFilter = ref("Sender");
 
 const filters = ["Sender", "Purpose", "Amount", "Date"];
 
-const AddIncomeDialog = shallowRef<ReturnType<typeof defineAsyncComponent> | null>(null);
+// Typed as `any` because the async-loaded dialog component's prop shape
+// varies by which quick-action opened it, and Vue's DefineComponent
+// generics don't unify cleanly across those shapes for a single ref.
+const AddIncomeDialog = shallowRef<any>(null);
 
 function openAddDialog() {
   if (!AddIncomeDialog.value) {
@@ -160,6 +156,8 @@ function openDuplicate(income: Income) {
 watch(addDialog, (isOpen) => {
   if (!isOpen) duplicateEntry.value = undefined;
 });
+
+onMounted(() => load());
 
 async function load() {
   await incomeStore.getIncomes();
@@ -217,24 +215,4 @@ async function handleDelete() {
   deleteDialog.value = false;
   selectedIncome.value = null;
 }
-
-function scrollToEnd() {
-  nextTick(() => {
-    const el = listContainer.value;
-    if (el) el.scrollTop = el.scrollHeight;
-  });
-}
-
-// to automatically scroll to the end
-watch(
-  filteredIncomes,
-  () => {
-    scrollToEnd();
-  },
-  { deep: true }
-);
-
-onMounted(() => {
-  load().then(scrollToEnd);
-});
 </script>

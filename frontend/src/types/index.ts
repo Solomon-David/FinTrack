@@ -16,6 +16,7 @@ export interface User {
   };
   isVerified: boolean;
   dob?: Date;
+  preferredCurrency?: string;
   billsSummary?: Record<string, number>;
   plansSummary?: Record<string, number>;
 }
@@ -27,10 +28,7 @@ export interface IncomeEntry {
   amount: number | null;
   sender: string;
   purpose?: string;
-  currency?: {
-    type: string;
-    default: "NGN";
-  };
+  currency?: string;
 }
 
 export interface ExpenseEntry {
@@ -44,6 +42,8 @@ export interface ExpenseEntry {
   billType?: "Electricity" | "Accommodation" | "Subscription" | "Insurance" | "Other";
   billRecurrence?: "One-time" | "Daily" | "Weekly" | "Monthly" | "Yearly";
   billDueDate?: string;
+  billTypeId?: string;
+  billPaymentRemark?: string;
 }
 
 export interface RCDataEntry {
@@ -63,15 +63,9 @@ export interface RCDataEntry {
 export interface BillEntry {
   date: string | null;
   amount: number | null; // amount paid
-  total: number | null; // total owed
+  total: number | null;  // total owed
   currency?: string;
-  type:
-    | "Electricity"
-    | "Accommodation"
-    | "Subscription"
-    | "Insurance"
-    | "Utility"
-    | "Other";
+  type: "Electricity" | "Accommodation" | "Subscription" | "Insurance" | "Other";
   name: string;
   status?: "Paid" | "Part" | "Unpaid" | "Overdue"; // optional override only
   recurrence: "One-time" | "Daily" | "Weekly" | "Monthly" | "Yearly";
@@ -79,11 +73,22 @@ export interface BillEntry {
   remark: string;
 }
 
+export interface BillTypeEntry {
+  name: string;
+  type: "Electricity" | "Accommodation" | "Subscription" | "Insurance" | "Other";
+  total: number | null;
+  currency?: string;
+  recurrence: "One-time" | "Daily" | "Weekly" | "Monthly" | "Yearly";
+  dueEvery?: number;
+  remark?: string;
+  status?: "Paid" | "Part" | "Unpaid" | "Overdue"; // optional manual override (e.g. mark Overdue)
+}
+
 export interface PlanEntry {
   name: string;
   description?: string;
-  progress: number | null;              // amount saved / put toward the plan so far
-  targetAmount: number | "Unknown" | null; // total amount the plan is aiming for
+  progress: number | null;                 // amount saved / put toward the plan so far
+  targetAmount: number | "Unknown" | null;  // total amount the plan is aiming for
   dueDate?: string | null;
   status?: "Completed" | "In Progress" | "Overdue"; // optional override only
   currency?: string;

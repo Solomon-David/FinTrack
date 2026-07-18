@@ -2,11 +2,11 @@
   <v-container fluid class="pa-0">
     <SearchComponent :filters="filters" :on-search-fn="handleSearch" />
 
-    <div class="px-4 pt-2 d-flex flex-column" style="height: calc(100vh - 180px)">
+    <div class="px-4 d-flex flex-column" style="height: calc(100vh - 180px)">
       <div class="d-flex align-center justify-space-between mb-2">
         <v-spacer />
         <h2 class="text-h6 font-weight-bold">Records</h2>
-        <v-spacer />
+        <v-spacer/>
         <v-btn
           icon="mdi-refresh"
           variant="text"
@@ -17,7 +17,7 @@
         />
       </div>
 
-      <div ref="listContainer" class="overflow-y-auto flex-grow-1">
+      <div class="overflow-y-auto flex-grow-1">
         <div v-for="(group, date) in groupedRecords" :key="date" class="mb-4">
           <RCDataItem
             v-for="record in group"
@@ -43,13 +43,10 @@
     </div>
 
     <div class="d-flex justify-center mt-4 mb-6">
-      <v-btn color="secondary" variant="flat" rounded="xl" @click="generateDialog = true">
+      <v-btn color="secondary" variant="flat" rounded="xl" :to="{ name: 'summaries' }">
         Summaries
       </v-btn>
     </div>
-
-    <!-- Generate Summary Dialog -->
-    <GenerateSummaryDialog v-model="generateDialog" type="RCData" />
 
     <v-btn
       icon="mdi-plus"
@@ -92,15 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  ref,
-  computed,
-  onMounted,
-  defineAsyncComponent,
-  shallowRef,
-  watch,
-  nextTick,
-} from "vue";
+import { ref, computed, onMounted, defineAsyncComponent, shallowRef, watch } from "vue";
 import { useRCDataStore } from "@/stores/rcdata.store";
 import type { RCData } from "@/stores/rcdata.store";
 import type { RCDataEntry } from "@/types";
@@ -108,16 +97,12 @@ import RCDataItem from "@/components/rcdata/RCDataItem.vue";
 import RCDataEditDialog from "@/components/rcdata/RCDataEditDialog.vue";
 import SearchComponent from "@/components/shared/SearchComponent.vue";
 import LoadingDialog from "@/components/shared/LoadingDialog.vue";
-import GenerateSummaryDialog from "@/components/summaries/GenerateSummaryDialog.vue";
 
 const rcDataStore = useRCDataStore();
-
-const listContainer = ref<HTMLElement | null>(null);
 
 const addDialog = ref(false);
 const editDialog = ref(false);
 const deleteDialog = ref(false);
-const generateDialog = ref(false);
 const selectedRecord = ref<RCData | null>(null);
 const duplicateEntry = ref<Partial<RCDataEntry> | undefined>(undefined);
 const searchQuery = ref("");
@@ -125,7 +110,10 @@ const searchFilter = ref("Sender");
 
 const filters = ["Sender", "Network", "Type", "Date"];
 
-const AddRCDataDialog = shallowRef<ReturnType<typeof defineAsyncComponent> | null>(null);
+// Typed as `any` because the async-loaded dialog component's prop shape
+// varies by which quick-action opened it, and Vue's DefineComponent
+// generics don't unify cleanly across those shapes for a single ref.
+const AddRCDataDialog = shallowRef<any>(null);
 
 function openAddDialog() {
   if (!AddRCDataDialog.value) {
@@ -162,6 +150,8 @@ function openDuplicate(record: RCData) {
 watch(addDialog, (isOpen) => {
   if (!isOpen) duplicateEntry.value = undefined;
 });
+
+onMounted(() => load());
 
 async function load() {
   await rcDataStore.getRCData();
@@ -237,24 +227,4 @@ async function handleDelete() {
   deleteDialog.value = false;
   selectedRecord.value = null;
 }
-
-function scrollToEnd() {
-  nextTick(() => {
-    const el = listContainer.value;
-    if (el) el.scrollTop = el.scrollHeight;
-  });
-}
-
-// to automatically scroll to the end
-watch(
-  filteredRecords,
-  () => {
-    scrollToEnd();
-  },
-  { deep: true }
-);
-
-onMounted(() => {
-  load().then(scrollToEnd);
-});
 </script>

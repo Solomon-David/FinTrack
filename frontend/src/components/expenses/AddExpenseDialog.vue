@@ -3,9 +3,10 @@
     <v-container
       class="px-6 pb-5 pt-1 bg-light rounded-lg d-flex flex-column gap-3 overflow-y-auto"
     >
+      <!-- Header -->
       <DialogHeaderComponent title="Add Expense" v-model="open" />
-
       <v-form>
+        <!-- Expense Forms -->
         <div v-for="(entry, index) in entries" :key="index" class="d-flex flex-column">
           <div v-if="entries.length > 1" class="d-flex align-center ga-2 mb-2">
             <v-divider />
@@ -26,7 +27,6 @@
             density="comfortable"
             :readonly="entry.isBill && !!entry.billTypeId"
           />
-
           <v-text-field
             v-model="entry.amount"
             variant="outlined"
@@ -51,14 +51,12 @@
               </v-btn>
             </template>
           </v-text-field>
-
           <v-text-field
             v-model="entry.vendor"
             variant="outlined"
             label="Vendor (optional)"
             density="comfortable"
           />
-
           <v-checkbox
             v-model="entry.isBill"
             label="This is a bill payment"
@@ -83,18 +81,14 @@
               <template #item="{ props: itemProps, item }">
                 <v-list-item
                   v-bind="itemProps"
-                  :subtitle="`Paid: ₦${Number(item.amountPaid || 0).toLocaleString(
-                    'en-NG'
-                  )} / ₦${Number(item.total || 0).toLocaleString('en-NG')} • ${
-                    item.status || ''
-                  }`"
+                  :subtitle="`₦${item.raw.amountPaid}/₦${item.raw.total} • ${item.raw.status}`"
                 />
               </template>
             </v-select>
 
             <div
               v-if="selectedBillType(entry)"
-              class="text-caption text-medium-emphasis mb-3 ml-1"
+              class="text-caption text-medium-emphasis mb-2"
             >
               Remaining: ₦{{ (selectedBillType(entry)!.total - selectedBillType(entry)!.amountPaid).toLocaleString('en-NG') }}
             </div>
@@ -107,6 +101,7 @@
             />
           </template>
 
+          <!-- Minus button — hidden when only one entry -->
           <div v-if="entries.length > 1" class="d-flex justify-center mb-2">
             <v-btn
               icon="mdi-minus"
@@ -120,6 +115,7 @@
         </div>
       </v-form>
 
+      <!-- Plus button -->
       <div class="d-flex justify-center">
         <v-btn
           icon="mdi-plus"
@@ -131,6 +127,7 @@
         />
       </div>
 
+      <!-- Submit -->
       <v-btn
         color="secondary"
         variant="flat"
@@ -144,6 +141,7 @@
         {{ entries.length > 1 ? `Submit (${entries.length})` : `Submit` }}
       </v-btn>
 
+      <!-- Snackbar -->
       <v-snackbar
         v-model="snackbar.show"
         :color="snackbar.color"
@@ -158,25 +156,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch, onMounted } from "vue";
+import { onMounted, ref, reactive, watch } from "vue";
 import { useUserStore } from "@/stores/users.stores";
 import { useExpenseStore } from "@/stores/expense.store";
-import { useBillTypeStore } from "@/stores/billtype.store";
 import DialogHeaderComponent from "@/components/shared/DialogHeaderComponent.vue";
 import type { ExpenseEntry } from "@/types";
+import { useBillTypeStore } from "@/stores/billtype.store";
 
-const props = defineProps<{ initialEntry?: Partial<ExpenseEntry> }>();
-const open = defineModel<boolean>({ required: true });
-
-const userStore = useUserStore();
-const expenseStore = useExpenseStore();
-const billTypeStore = useBillTypeStore();
-const loading = ref(false);
 const snackbar = reactive({ show: false, message: "", color: "success" });
 
-onMounted(() => {
-  if (billTypeStore.billTypes.length === 0) billTypeStore.getBillTypes();
-});
+function showSnackbar(message: string, color: string) {
+  snackbar.message = message;
+  snackbar.color = color;
+  snackbar.show = true;
+}
+
+const props = defineProps<{
+  initialEntry?: Partial<ExpenseEntry>;
+}>();
+
+const open = defineModel<boolean>({ required: true });
+const userStore = useUserStore();
+const expenseStore = useExpenseStore();
+const loading = ref(false);
 
 function createEntry(): ExpenseEntry {
   return {
@@ -193,14 +195,14 @@ function createEntry(): ExpenseEntry {
 
 const entries = ref<ExpenseEntry[]>([createEntry()]);
 
+function resetEntries() {
+  entries.value = [createEntry()];
+}
+
 watch(
   () => [open.value, props.initialEntry],
   ([isOpen]) => {
-    if (isOpen) entries.value = [createEntry()];
-    else {
-      entries.value = [createEntry()];
-      snackbar.show = false;
-    }
+    if (isOpen) resetEntries();
   }
 );
 
@@ -209,11 +211,21 @@ function addEntry() {
 }
 
 function removeEntry(index: number) {
-  if (entries.value.length > 1) entries.value.splice(index, 1);
+  if (entries.value.length > 1) {
+    entries.value.splice(index, 1);
+  }
 }
 
+//setting bill type when selected
+
+const billTypeStore = useBillTypeStore();
+
+onMounted(() => {
+  if (billTypeStore.billTypes.length === 0) billTypeStore.getBillTypes();
+});
+
 function selectedBillType(entry: ExpenseEntry) {
-  return billTypeStore.billTypes.find((b) => b._id === entry.billTypeId) ?? null;
+  return billTypeStore.billTypes.find((b) => b._id === entry.billTypeId);
 }
 
 function onBillToggle(entry: ExpenseEntry) {
@@ -227,14 +239,9 @@ function onBillTypeSelected(entry: ExpenseEntry) {
   const bt = selectedBillType(entry);
   if (bt) {
     entry.item = bt.name;
-    entry.amount = bt.total - bt.amountPaid; // suggest remaining balance
+    // Suggest the remaining amount, user can edit for a partial payment
+    entry.amount = bt.total - bt.amountPaid;
   }
-}
-
-function showSnackbar(message: string, color: string) {
-  snackbar.message = message;
-  snackbar.color = color;
-  snackbar.show = true;
 }
 
 async function submit() {

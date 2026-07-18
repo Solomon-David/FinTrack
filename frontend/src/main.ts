@@ -31,7 +31,7 @@ const updateSW = registerSW({
   onOfflineReady() {
     console.log('FinTrack is ready to work offline.');
   },
-  onRegisteredSW(swUrl, registration) {
+  onRegisteredSW(_swUrl, registration) {
     if (!registration) return;
     // Check for a new service worker every 30 minutes while the tab is open
     setInterval(() => {

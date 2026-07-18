@@ -3,20 +3,20 @@ import { ref } from 'vue';
 import * as incomeApi from '@/api/income.api';
 import type { IncomeEntry as IncomeEntryPayload } from '@/types/';
 
-// export interface Income {
-//   _id: string;
-//   user: string;
-//   amount: number;
-//   currency: string;
-//   date: string;
-//   sender: string;
-//   purpose?: string;
-//   createdAt: string;
-//   updatedAt: string;
-// }
+export interface Income {
+  _id: string;
+  user: string;
+  amount: number;
+  currency: string;
+  date: string;
+  sender: string;
+  purpose?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export const useIncomeStore = defineStore('income', () => {
-  const incomes = ref<IncomeEntryPayload[]>([]);
+  const incomes = ref<Income[]>([]);
   const isLoading = ref(false);
   const error = ref<string | null>(null);
 

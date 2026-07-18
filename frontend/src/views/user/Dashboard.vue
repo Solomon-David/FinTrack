@@ -49,10 +49,10 @@
           <span
             class="font-weight-bold"
             :class="
-              userStore.billsSummary?.paid === userStore.billsSummary?.total &&
-              userStore.billsSummary?.total > 0
-                ? 'text-success'
-                : 'text-error'
+              userStore.billsSummary?.paid < userStore.billsSummary?.total ||
+              userStore.billsSummary?.total == 0
+                ? 'text-error'
+                : 'text-success'
             "
             >{{ userStore.billsSummary?.paid ?? 0 }}</span
           >
@@ -104,7 +104,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, shallowRef, defineAsyncComponent, onMounted, onActivated } from "vue";
+import { ref, shallowRef, defineAsyncComponent } from "vue";
+import type { Component } from "vue";
 import { useUserStore } from "@/stores/users.stores";
 import UserPhoto from "@/components/user/UserPhoto.vue";
 import LoadingDialog from "@/components/shared/LoadingDialog.vue";
@@ -113,20 +114,14 @@ import { useDisplay } from "vuetify";
 const userStore = useUserStore();
 const display = useDisplay();
 
-const refreshDashboardUserDetails = async () => {
-  if (navigator.onLine) {
-    try {
-      await userStore.getUserDetails();
-    } catch (error) {
-      console.warn("Dashboard refresh failed:", error);
-    }
-  }
-};
+interface QuickAction {
+  label: string;
+  icon: string;
+  color: string;
+  component: () => Promise<any>;
+}
 
-onMounted(refreshDashboardUserDetails);
-onActivated(refreshDashboardUserDetails);
-
-const quickActions = [
+const quickActions: QuickAction[] = [
   {
     label: "Record Expense",
     icon: "mdi-arrow-up",
@@ -166,14 +161,17 @@ const quickActions = [
 ];
 
 const dialog = ref(false);
-const dialogComponent = shallowRef<ReturnType<typeof defineAsyncComponent> | null>(null);
+// Typed as `any` because the quick-action dialogs have differing prop
+// shapes (ExpenseEntry, IncomeEntry, RCDataEntry, PlanEntry, etc.), and
+// Vue's DefineComponent generics don't unify across those for one ref.
+const dialogComponent = shallowRef<Component | null>(null);
 
 function openDialog(label: string) {
   const action = quickActions.find((a) => a.label === label);
   if (!action) return;
 
   dialogComponent.value = defineAsyncComponent({
-    loader: action.component,
+    loader: action.component as () => Promise<any>,
     loadingComponent: LoadingDialog,
     delay: 0,
   });

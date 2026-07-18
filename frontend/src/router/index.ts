@@ -5,7 +5,6 @@ import { useUserStore } from "@/stores/users.stores";
 import GuestLayout from "@layouts/GuestLayout.vue";
 
 //views
-// import Home from "@comps/HelloWorld.vue";
 import AuthView from "@views/auth/AuthView.vue";
 import LoginView from "@views/auth/LoginView.vue";
 import SignUpView from "@views/auth/SignUpView.vue";
@@ -117,10 +116,10 @@ const router = createRouter({
 });
 
 // Initialize user from localStorage on first load
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (_to, _from, next) => {
   const userStore = useUserStore();
   if (!userStore.user) {
-    await userStore.initializeUser();
+    userStore.initializeUser();
   }
   next();
 });

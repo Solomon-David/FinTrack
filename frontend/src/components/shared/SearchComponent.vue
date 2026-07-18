@@ -12,7 +12,7 @@
           size="large"
           append-icon="mdi-menu-down"
           class="text-none bg-secondary my-none mx-none"
-          style="min-width: 100px"
+          style="min-width: 140px"
           v-bind="menuProps"
         >
           {{ selectedFilter || filters[0] }}
@@ -35,7 +35,7 @@
     <v-text-field
       v-model="searchQuery"
       placeholder="Search"
-      variant="flat"
+      variant="plain"
       density="comfortable"
       rounded="xl"
       hide-details

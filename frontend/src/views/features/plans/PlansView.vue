@@ -6,7 +6,7 @@
       <div class="d-flex align-center justify-space-between mb-2">
         <v-spacer />
         <h2 class="text-h6 font-weight-bold">Plans</h2>
-        <v-spacer></v-spacer>
+        <v-spacer/>
         <v-btn
           icon="mdi-refresh"
           variant="text"
@@ -33,10 +33,7 @@
           />
         </div>
 
-        <div
-          v-if="!planStore.isLoading && filteredPlans.length === 0"
-          class="text-center py-10"
-        >
+        <div v-if="!planStore.isLoading && filteredPlans.length === 0" class="text-center py-10">
           <v-icon size="48" color="grey-lighten-1">mdi-bag-checked</v-icon>
           <p class="text-medium-emphasis mt-2">No plans found</p>
         </div>
@@ -119,7 +116,10 @@ const searchFilter = ref("Name");
 
 const filters = ["Name", "Status", "Due Date"];
 
-const AddPlanDialog = shallowRef<ReturnType<typeof defineAsyncComponent> | null>(null);
+// Typed as `any` because the async-loaded dialog component's prop shape
+// varies by which quick-action opened it, and Vue's DefineComponent
+// generics don't unify cleanly across those shapes for a single ref.
+const AddPlanDialog = shallowRef<any>(null);
 
 function openAddDialog() {
   if (!AddPlanDialog.value) {
@@ -173,10 +173,7 @@ const filteredPlans = computed(() => {
       if (!plan.dueDate) return false;
       const date = new Date(plan.dueDate);
       const full = date.toLocaleDateString("en-GB");
-      const monthYear = `${String(date.getMonth() + 1).padStart(
-        2,
-        "0"
-      )}/${date.getFullYear()}`;
+      const monthYear = `${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
       return full.includes(q) || monthYear.includes(q);
     }
     return true;
@@ -193,7 +190,6 @@ const groupedPlans = computed(() => {
     return acc;
   }, {} as Record<string, Plan[]>);
 
-  // Return groups in a stable, meaningful order
   const ordered: Record<string, Plan[]> = {};
   for (const status of order) {
     if (groups[status]) ordered[status] = groups[status];

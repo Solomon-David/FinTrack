@@ -38,7 +38,7 @@
     </v-row>
 
     <!-- Profile Form -->
-    <v-form ref="formRef">
+    <v-form>
       <v-row dense>
         <!-- Full Name -->
         <v-col cols="12">
@@ -313,7 +313,6 @@ const fileInput = ref<HTMLInputElement | null>(null);
 const photoUploading = ref(false);
 
 // Form
-const formRef = ref();
 type FormField = "firstName" | "nickname" | "dob" | "email";
 
 const form = reactive<Record<FormField, string>>({

@@ -19,7 +19,7 @@ export default defineConfig({
       // only when you specifically need to test install/offline behavior
       // locally — otherwise every reload risks serving a stale cached build.
       devOptions: {
-        enabled: false,
+        enabled: true,
         type: "module",
       },
       workbox: {
@@ -79,19 +79,19 @@ export default defineConfig({
         scope: "/",
         icons: [
           {
-            src: "icons/pwa-192x192.png",
+            src: "assets/logo_light_small.png",
             sizes: "192x192",
             type: "image/png",
             purpose: "any",
           },
           {
-            src: "icons/pwa-512x512.png",
+            src: "assets/logo_light_large.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "any",
           },
           {
-            src: "icons/pwa-maskable-512x512.png",
+            src: "assets/logo_light_large.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable",

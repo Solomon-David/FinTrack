@@ -30,19 +30,13 @@
     </div>
 
     <!-- Income + Expenses always shown -->
-    <div
-      class="d-flex justify-space-between py-1"
-      v-if="props.type === 'Income' || props.type === undefined"
-    >
+    <div class="d-flex justify-space-between py-1">
       <span class="text-body-2">Income</span>
       <span class="text-body-2 font-weight-bold text-success">
         ₦{{ get("Income").toLocaleString("en-NG") }}
       </span>
     </div>
-    <div
-      class="d-flex justify-space-between py-1"
-      v-if="props.type === 'Expenses' || props.type === undefined"
-    >
+    <div class="d-flex justify-space-between py-1">
       <span class="text-body-2">Expenses</span>
       <span class="text-body-2 font-weight-bold text-error">
         ₦{{ get("Expenses").toLocaleString("en-NG") }}
@@ -51,7 +45,7 @@
 
     <!-- Monthly/Yearly extras -->
     <template v-if="summary.timeframe !== 'Daily'">
-      <div class="d-flex justify-space-between py-1" v-if="props.type === undefined">
+      <div class="d-flex justify-space-between py-1">
         <span class="text-body-2">Difference</span>
         <span
           class="text-body-2 font-weight-bold"
@@ -60,14 +54,11 @@
           ₦{{ get("Difference").toLocaleString("en-NG") }}
         </span>
       </div>
-      <div
-        class="d-flex justify-space-between py-1"
-        v-if="props.type === 'RCData' || props.type === undefined"
-      >
+      <div class="d-flex justify-space-between py-1">
         <span class="text-body-2">RC-Data</span>
         <span class="text-body-2 font-weight-bold">{{ formattedRCData }}</span>
       </div>
-      <div class="d-flex justify-space-between py-1" v-if="props.type === undefined">
+      <div class="d-flex justify-space-between py-1">
         <span class="text-body-2">Bills</span>
         <span class="text-body-2 font-weight-bold">
           {{ get("BillsPaid") }}/{{ get("BillsTotal") }}
@@ -93,11 +84,11 @@
 import { computed } from "vue";
 import type { Summary } from "@/stores/summary.store";
 
-const props = defineProps<{ summary: Summary; type?: string | undefined }>();
+const props = defineProps<{ summary: Summary }>();
 const emit = defineEmits<{
   export: [summary: Summary];
+  delete: [summary: Summary];
 }>();
-
 
 function get(category: string) {
   return props.summary.data.find((d) => d.category === category)?.total ?? 0;
