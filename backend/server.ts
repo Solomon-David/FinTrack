@@ -41,7 +41,10 @@ const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
 
 // Matches any subdomain ending in "-solomondavids-projects.vercel.app"
 // over https. Adjust the team/user slug here if it ever changes.
-const vercelPreviewPattern = /^https:\/\/[a-z0-9-]+-solomondavids-projects\.vercel\.app$/;
+// Matches any *.vercel.app subdomain — broader than the previous
+// project-specific pattern, use only if you're comfortable trusting
+// all Vercel-hosted origins rather than just this specific project's.
+const vercelPreviewPattern = /^https:\/\/[a-z0-9-]+\.vercel\.app$/;
 
 app.use(cors({
   origin: (origin, callback) => {
