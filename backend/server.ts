@@ -29,16 +29,28 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-// FRONTEND_URL supports a comma-separated list (e.g. production domain +
-// Vercel preview deployment URLs). Falls back to localhost for local dev.
+// FRONTEND_URL supports a comma-separated list of exact origins (your
+// production domain, plus localhost for dev). In addition, any Vercel
+// preview deployment URL for this project (e.g.
+// https://fin-track-<hash>-solomondavids-projects.vercel.app) is allowed
+// automatically via pattern match, since Vercel generates a new, unique
+// subdomain for every push and there's no way to list them all ahead of time.
 const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
   .split(',')
   .map((origin) => origin.trim());
 
+// Matches any subdomain ending in "-solomondavids-projects.vercel.app"
+// over https. Adjust the team/user slug here if it ever changes.
+const vercelPreviewPattern = /^https:\/\/[a-z0-9-]+-solomondavids-projects\.vercel\.app$/;
+
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (e.g. curl, server-to-server, health checks)
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+    if (allowedOrigins.includes(origin) || vercelPreviewPattern.test(origin)) {
       callback(null, true);
     } else {
       callback(new Error(`Origin ${origin} not allowed by CORS`));
