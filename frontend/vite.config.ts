@@ -13,7 +13,7 @@ export default defineConfig({
       registerType: "autoUpdate",
       // main.ts registers the service worker manually via `virtual:pwa-register`,
       // so injectRegister is turned off to avoid double-registering it.
-      injectRegister: false,
+      injectRegister: "auto",
       // Keep the SW OFF during plain `npm run dev` so local changes always
       // show immediately without any caching in the loop. Flip this to true
       // only when you specifically need to test install/offline behavior
@@ -97,6 +97,19 @@ export default defineConfig({
             purpose: "maskable",
           },
         ],
+       screenshots: [
+  {
+    src: "/assets/desktop.jpeg",
+    sizes: "1224x747",
+    type: "image/jpeg",
+    form_factor: "wide"
+  },
+  {
+    src: "/assets/mobile.jpeg",
+    sizes: "439x810",
+    type: "image/jpeg"
+  }
+]
       },
     })
   ],
@@ -107,6 +120,7 @@ export default defineConfig({
       "@layouts": fileURLToPath(new URL("./src/layouts", import.meta.url)),
       "@views": fileURLToPath(new URL("./src/views/", import.meta.url)),
       "@stores": fileURLToPath(new URL("./src/stores/", import.meta.url)),
+      "@composables": fileURLToPath(new URL("./src/composables/", import.meta.url)),
     }
   },
   test: {

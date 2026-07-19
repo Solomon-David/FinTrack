@@ -103,15 +103,7 @@
 
       <!-- Only rendered once the browser has fired beforeinstallprompt,
            i.e. the app is installable and not already installed -->
-      <v-list-item
-        v-if="canInstall"
-        prepend-icon="mdi-download-outline"
-        title="Install App"
-        rounded="lg"
-        @click="install"
-      />
-
-      <v-divider class="my-2" />
+      <v-list-item <v-divider class="my-2" />
 
       <v-list-item
         prepend-icon="mdi-logout"
@@ -129,7 +121,6 @@ import { useUserStore } from "@/stores/users.stores";
 import { useRouter } from "vue-router";
 import Logo from "@/assets/logo_dark.png";
 import axiosInstance from "@/utils/axios";
-import { useInstallPrompt } from "@/composables/useInstallPrompt";
 
 const props = defineProps<{ modelValue: boolean }>();
 const emit = defineEmits<{ "update:modelValue": [value: boolean] }>();
@@ -141,7 +132,6 @@ const drawerModel = computed({
 
 const userStore = useUserStore();
 const router = useRouter();
-const { canInstall, install } = useInstallPrompt();
 
 async function handleLogout() {
   try {

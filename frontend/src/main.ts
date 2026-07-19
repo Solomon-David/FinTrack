@@ -5,7 +5,6 @@ import App from './App.vue'
 import router from "./router";
 import { registerSW } from 'virtual:pwa-register';
 import {testConnection} from "./utils/axios";
-
 import vuetify from "./plugins/vuetify";
 
 testConnection();
