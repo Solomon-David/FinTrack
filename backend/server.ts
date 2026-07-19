@@ -19,6 +19,18 @@ import { startSummaryJob } from './utils/summaryCronJob';
 // Load environment variables
 dotenv.config();
 
+// Prevent unexpected unhandled promise rejections or exceptions (e.g. a
+// third-party SDK network error) from crashing the whole process. Render
+// will otherwise restart the service on every uncaught error, which is
+// what was happening with the nodemailer SMTP timeout.
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled promise rejection:', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception:', err);
+});
+
+
 // Database connection
 connectDB().catch((err: Error) => {
   console.error('Failed to connect to MongoDB:', err);
