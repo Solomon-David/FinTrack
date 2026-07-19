@@ -17,7 +17,7 @@
         />
       </div>
 
-      <div class="overflow-y-auto flex-grow-1">
+      <div ref="listContainer" class="overflow-y-auto flex-grow-1">
         <div v-for="(group, date) in groupedExpenses" :key="date" class="mb-4">
           <ExpenseItem
             v-for="expense in group"
@@ -86,7 +86,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, defineAsyncComponent, shallowRef, watch } from "vue";
+import {
+  ref,
+  computed,
+  onMounted,
+  defineAsyncComponent,
+  shallowRef,
+  watch,
+  nextTick,
+} from "vue";
 import { useExpenseStore } from "@/stores/expense.store";
 import type { Expense } from "@/stores/expense.store";
 import type { ExpenseEntry } from "@/types";
@@ -106,6 +114,8 @@ const searchQuery = ref("");
 const searchFilter = ref("Item");
 
 const filters = ["Item", "Vendor", "Amount", "Date"];
+
+const listContainer = ref<HTMLElement | null>(null);
 
 // Typed as `any` because the async-loaded dialog component's prop shape
 // varies by which quick-action opened it, and Vue's DefineComponent
@@ -151,6 +161,8 @@ onMounted(() => load());
 
 async function load() {
   await expenseStore.getExpenses();
+
+   await scrollToBottom();
 }
 
 const filteredExpenses = computed(() => {
@@ -170,6 +182,13 @@ const filteredExpenses = computed(() => {
     return true;
   });
 });
+
+watch(
+  () => filteredExpenses.value.length,
+  async () => {
+    await scrollToBottom();
+  }
+);
 
 const groupedExpenses = computed(() => {
   return filteredExpenses.value.reduce((groups, expense) => {
@@ -204,5 +223,16 @@ async function handleDelete() {
   await expenseStore.deleteExpense(selectedExpense.value._id);
   deleteDialog.value = false;
   selectedExpense.value = null;
+
+  await scrollToBottom();
+}
+
+async function scrollToBottom() {
+  await nextTick();
+
+  listContainer.value?.scrollTo({
+    top: listContainer.value.scrollHeight,
+    behavior: "smooth",
+  });
 }
 </script>

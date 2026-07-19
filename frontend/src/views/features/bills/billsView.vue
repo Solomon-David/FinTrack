@@ -16,7 +16,7 @@
         />
       </div>
 
-      <div class="overflow-y-auto flex-grow-1">
+      <div ref="listContainer" class="overflow-y-auto flex-grow-1">
         <div v-for="(group, status) in groupedBillTypes" :key="status" class="mb-4">
           <div class="text-caption font-weight-bold text-medium-emphasis mb-1">
             {{ status }} ({{ group.length }})
@@ -151,7 +151,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, defineAsyncComponent, shallowRef, watch } from "vue";
+import {
+  ref,
+  computed,
+  onMounted,
+  defineAsyncComponent,
+  shallowRef,
+  watch,
+  nextTick,
+} from "vue";
 import { useBillTypeStore } from "@/stores/billtype.store";
 import type { BillType } from "@/stores/billtype.store";
 import type { BillTypeEntry } from "@/types";
@@ -170,6 +178,8 @@ const searchQuery = ref("");
 const searchFilter = ref("Name");
 
 const filters = ["Name", "Type", "Status", "Due Date"];
+
+const listContainer = ref<HTMLElement | null>(null);
 
 // Typed as `any` because the async-loaded dialog component's prop shape
 // varies by which quick-action opened it, and Vue's DefineComponent
@@ -218,6 +228,8 @@ onMounted(() => load());
 
 async function load() {
   await billTypeStore.getBillTypes();
+
+  await scrollToBottom();
 }
 
 const filteredBillTypes = computed(() => {
@@ -241,6 +253,13 @@ const filteredBillTypes = computed(() => {
     return true;
   });
 });
+
+watch(
+  () => filteredBillTypes.value.length,
+  async () => {
+    await scrollToBottom();
+  }
+);
 
 // Group by status so overdue/unpaid bills stand out from paid ones
 const groupedBillTypes = computed(() => {
@@ -303,5 +322,16 @@ async function handleDelete() {
   await billTypeStore.deleteBillType(selectedBillType.value._id);
   deleteDialog.value = false;
   selectedBillType.value = null;
+
+  await scrollToBottom();
+}
+
+async function scrollToBottom() {
+  await nextTick();
+
+  listContainer.value?.scrollTo({
+    top: listContainer.value.scrollHeight,
+    behavior: "smooth",
+  });
 }
 </script>

@@ -17,7 +17,7 @@
         />
       </div>
 
-      <div class="overflow-y-auto flex-grow-1">
+      <div ref="listContainer" class="overflow-y-auto flex-grow-1">
         <div v-for="(group, date) in groupedRecords" :key="date" class="mb-4">
           <RCDataItem
             v-for="record in group"
@@ -89,7 +89,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, defineAsyncComponent, shallowRef, watch } from "vue";
+import {
+  ref,
+  computed,
+  onMounted,
+  defineAsyncComponent,
+  shallowRef,
+  watch,
+  nextTick,
+} from "vue";
 import { useRCDataStore } from "@/stores/rcdata.store";
 import type { RCData } from "@/stores/rcdata.store";
 import type { RCDataEntry } from "@/types";
@@ -110,10 +118,21 @@ const searchFilter = ref("Sender");
 
 const filters = ["Sender", "Network", "Type", "Date"];
 
+const listContainer = ref<HTMLElement | null>(null);
+
 // Typed as `any` because the async-loaded dialog component's prop shape
 // varies by which quick-action opened it, and Vue's DefineComponent
 // generics don't unify cleanly across those shapes for a single ref.
 const AddRCDataDialog = shallowRef<any>(null);
+
+async function scrollToBottom() {
+  await nextTick();
+
+  listContainer.value?.scrollTo({
+    top: listContainer.value.scrollHeight,
+    behavior: "smooth",
+  });
+}
 
 function openAddDialog() {
   if (!AddRCDataDialog.value) {
@@ -135,6 +154,7 @@ function openDuplicate(record: RCData) {
       delay: 0,
     });
   }
+
   duplicateEntry.value = {
     date: new Date(record.date).toISOString().split("T")[0],
     currency: record.currency,
@@ -144,6 +164,7 @@ function openDuplicate(record: RCData) {
     network: record.network,
     remark: record.remark,
   };
+
   addDialog.value = true;
 }
 
@@ -151,21 +172,30 @@ watch(addDialog, (isOpen) => {
   if (!isOpen) duplicateEntry.value = undefined;
 });
 
-onMounted(() => load());
+onMounted(async () => {
+  await load();
+});
 
 async function load() {
   await rcDataStore.getRCData();
+  await scrollToBottom();
 }
 
 const filteredRecords = computed(() => {
   const q = searchQuery.value.toLowerCase().trim();
+
   if (!q) return rcDataStore.records;
 
   return rcDataStore.records.filter((record) => {
     if (searchFilter.value === "Sender")
       return record.sender.name.toLowerCase().includes(q);
-    if (searchFilter.value === "Network") return record.network.toLowerCase().includes(q);
-    if (searchFilter.value === "Type") return record.type.toLowerCase().includes(q);
+
+    if (searchFilter.value === "Network")
+      return record.network.toLowerCase().includes(q);
+
+    if (searchFilter.value === "Type")
+      return record.type.toLowerCase().includes(q);
+
     if (searchFilter.value === "Date") {
       const date = new Date(record.date);
       const full = date.toLocaleDateString("en-GB");
@@ -173,17 +203,29 @@ const filteredRecords = computed(() => {
         2,
         "0"
       )}/${date.getFullYear()}`;
+
       return full.includes(q) || monthYear.includes(q);
     }
+
     return true;
   });
 });
 
+watch(
+  () => filteredRecords.value.length,
+  async () => {
+    await scrollToBottom();
+  }
+);
+
 const groupedRecords = computed(() => {
   return filteredRecords.value.reduce((groups, record) => {
     const date = new Date(record.date).toLocaleDateString("en-GB");
+
     if (!groups[date]) groups[date] = [];
+
     groups[date].push(record);
+
     return groups;
   }, {} as Record<string, RCData[]>);
 });
@@ -192,6 +234,7 @@ function groupTotal(group: RCData[]) {
   const airtime = group
     .filter((r) => r.type === "airtime")
     .reduce((sum, r) => sum + r.amount.amount, 0);
+
   const dataMB = group
     .filter((r) => r.type === "data")
     .reduce(
@@ -199,10 +242,14 @@ function groupTotal(group: RCData[]) {
         sum + (r.amount.size === "GB" ? r.amount.amount * 1024 : r.amount.amount),
       0
     );
+
   const dataGB = (dataMB / 1024).toFixed(1);
+
   const parts = [];
+
   if (airtime > 0) parts.push(`₦${airtime.toLocaleString("en-NG")}`);
   if (dataMB > 0) parts.push(`${dataGB}GB`);
+
   return parts.length > 0 ? parts.join(", ") : "—";
 }
 
@@ -223,8 +270,12 @@ function confirmDelete(record: RCData) {
 
 async function handleDelete() {
   if (!selectedRecord.value) return;
+
   await rcDataStore.deleteRCData(selectedRecord.value._id);
+
   deleteDialog.value = false;
   selectedRecord.value = null;
+
+  await scrollToBottom();
 }
 </script>
