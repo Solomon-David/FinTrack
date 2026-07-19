@@ -270,7 +270,7 @@ async function submit() {
     setTimeout(() => {
       entries.value = [createEntry()];
       open.value = false;
-    }, 1500);
+    }, 1000);
   } catch (err: any) {
     showSnackbar(err.message || "Failed to add bill.", "error");
   } finally {
