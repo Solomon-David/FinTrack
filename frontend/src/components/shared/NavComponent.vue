@@ -21,13 +21,13 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { useUserStore } from "@/stores/users.stores";
+// import { useUserStore } from "@/stores/users.stores";
 // import Avatar from "@components/user/Avatar.vue";
 import MenuDrawerComponent from "@components/shared/MenuDrawerComponent.vue";
 const props = defineProps<{ title?: string | undefined }>();
 
 const openMenu = ref(false);
-const userStore = useUserStore();
+// const userStore = useUserStore();
 </script>
 
 <style scoped></style>
