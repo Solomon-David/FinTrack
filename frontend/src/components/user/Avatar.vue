@@ -14,9 +14,10 @@
         <span
           v-bind="menuProps"
           class="text-caption font-weight-bold text-left"
-          style="cursor: pointer"
-          v-html="userStore.user?.nickname?.replaceAll(' ', '<br>')"
-        />
+          style="cursor: pointer; white-space: pre-line"
+        >
+          {{ displayNickname }}
+        </span>
       </template>
 
       <v-list rounded="lg" elevation="3" min-width="180" class="pa-1">
@@ -40,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useUserStore } from "../../stores/users.stores";
 import { useRouter } from "vue-router";
 import UserPhoto from "./UserPhoto.vue";
@@ -50,13 +51,20 @@ const userStore = useUserStore();
 const router = useRouter();
 const menu = ref(false);
 
+// Replaced v-html + replaceAll('<br>') with plain text interpolation and
+// `white-space: pre-line` on the span, which achieves the same visual line
+// break on spaces without injecting raw HTML. This avoids v-html ever
+// receiving `undefined` (when nickname hasn't loaded yet right after
+// login), which was producing malformed DOM during render — the likely
+// cause of the "Failed to execute 'setAttribute'" crash seen on mobile.
+const displayNickname = computed(() => userStore.user?.nickname ?? "");
+
 async function handleLogout() {
   try {
     await axiosInstance.post("/users/logout");
   } catch (err) {
     console.error("Logout error:", err);
   } finally {
-    // Always clear local state regardless of backend response
     userStore.logout();
     router.push({ name: "login" });
   }
