@@ -11,33 +11,16 @@ export default defineConfig({
     vue(),
     VitePWA({
       registerType: "autoUpdate",
-      // main.ts registers the service worker manually via `virtual:pwa-register`,
-      // so injectRegister is turned off to avoid double-registering it.
-      injectRegister: "auto",
-      // Keep the SW OFF during plain `npm run dev` so local changes always
-      // show immediately without any caching in the loop. Flip this to true
-      // only when you specifically need to test install/offline behavior
-      // locally — otherwise every reload risks serving a stale cached build.
+      injectRegister: false,
       devOptions: {
-        enabled: true,
+        enabled: false,
         type: "module",
       },
       workbox: {
-        // Falls back to the app shell for any unmatched navigation request,
-        // so deep links (e.g. /bills, /plans) still load while offline.
         navigateFallback: "/index.html",
         cleanupOutdatedCaches: true,
-        // IMPORTANT: skipWaiting/clientsClaim are intentionally left at their
-        // default (false) here. Turning them on makes a new service worker
-        // activate immediately and silently — which skips the "waiting"
-        // state that onNeedRefresh (in main.ts) depends on to prompt the
-        // user to reload. With them off, updates are detected properly and
-        // updateSW(true) (called after the user confirms) is what tells the
-        // waiting worker to skip waiting and take over.
         runtimeCaching: [
           {
-            // Network-first for API calls — always try for fresh data first,
-            // but fall back to the last successful response when offline.
             urlPattern: ({ url }) => url.pathname.startsWith("/api"),
             handler: "NetworkFirst",
             options: {
@@ -45,7 +28,7 @@ export default defineConfig({
               networkTimeoutSeconds: 8,
               expiration: {
                 maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24, // 1 day
+                maxAgeSeconds: 60 * 60 * 24,
               },
               cacheableResponse: {
                 statuses: [0, 200],
@@ -53,15 +36,13 @@ export default defineConfig({
             },
           },
           {
-            // Cache-first for uploaded/profile photos served from Cloudinary,
-            // since they rarely change once created.
             urlPattern: ({ url }) => url.hostname.includes("res.cloudinary.com"),
             handler: "CacheFirst",
             options: {
               cacheName: "fintrack-image-cache",
               expiration: {
                 maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+                maxAgeSeconds: 60 * 60 * 24 * 30,
               },
             },
           },
@@ -79,40 +60,34 @@ export default defineConfig({
         scope: "/",
         icons: [
           {
-            src: "assets/logo_light_small.png",
+            src: "icons/pwa-192x192.png",
             sizes: "192x192",
             type: "image/png",
             purpose: "any",
           },
           {
-            src: "assets/logo_light_large.png",
+            src: "icons/pwa-512x512.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "any",
           },
           {
-            src: "assets/logo_light_large.png",
+            src: "icons/pwa-maskable-512x512.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable",
           },
         ],
-       screenshots: [
-  {
-    src: "/assets/desktop.jpeg",
-    sizes: "1224x747",
-    type: "image/jpeg",
-    form_factor: "wide"
-  },
-  {
-    src: "/assets/mobile.jpeg",
-    sizes: "439x810",
-    type: "image/jpeg"
-  }
-]
       },
     })
   ],
+  // TEMPORARY — enables readable stack traces in production so we can
+  // diagnose the mobile-only crash. Remove once the bug is fixed, since
+  // source maps expose original source structure to anyone inspecting the
+  // deployed site.
+  build: {
+    sourcemap: true,
+  },
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
@@ -120,7 +95,6 @@ export default defineConfig({
       "@layouts": fileURLToPath(new URL("./src/layouts", import.meta.url)),
       "@views": fileURLToPath(new URL("./src/views/", import.meta.url)),
       "@stores": fileURLToPath(new URL("./src/stores/", import.meta.url)),
-      "@composables": fileURLToPath(new URL("./src/composables/", import.meta.url)),
     }
   },
   test: {
