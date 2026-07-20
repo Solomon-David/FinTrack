@@ -1,7 +1,11 @@
 <template>
   <div class="d-flex flex-column gap-3 justify-end">
     <!-- Top Row: Avatar and Arrow -->
-    <div class="d-flex align-center" style="cursor: pointer" @click="menu = !menu">
+    <div
+      class="d-flex align-end justify-end"
+      style="cursor: pointer"
+      @click="menu = !menu"
+    >
       <UserPhoto />
       <v-icon color="grey" class="ml-n1">mdi-menu-down</v-icon>
     </div>
@@ -12,7 +16,7 @@
     <v-menu v-model="menu" location="bottom start" :close-on-content-click="true">
       <template #activator="{ props: menuProps }">
         <span
-          v-bind="menuProps"
+          :v-bind="menuProps"
           class="text-caption font-weight-bold text-left"
           style="cursor: pointer; white-space: pre-line"
         >
