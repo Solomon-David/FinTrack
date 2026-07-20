@@ -22,7 +22,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useUserStore } from "@/stores/users.stores";
-import Avatar from "@components/user/Avatar.vue";
+// import Avatar from "@components/user/Avatar.vue";
 import MenuDrawerComponent from "@components/shared/MenuDrawerComponent.vue";
 const props = defineProps<{ title?: string | undefined }>();
 
