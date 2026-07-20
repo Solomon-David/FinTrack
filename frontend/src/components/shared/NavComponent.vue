@@ -10,12 +10,12 @@
     >
 
     <!-- This container holds the Avatar -->
-    <div>
+    <!-- <div>
       <template v-if="userStore.isAuthenticated">
         <Avatar />
       </template>
       <v-btn v-else icon="mdi-logout" variant="plain" color="accent" class="text-h6" />
-    </div>
+    </div> -->
   </v-app-bar>
 </template>
 
