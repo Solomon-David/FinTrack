@@ -96,7 +96,7 @@ const handleLogin = async () => {
     status.value = userStore.status;
     message.value = userStore.message;
     status.value = true;
-    router.push("/dashboard");
+    router.push("dashboard");
   } catch (error) {
     message.value = userStore.error || "Login failed";
     status.value = false;

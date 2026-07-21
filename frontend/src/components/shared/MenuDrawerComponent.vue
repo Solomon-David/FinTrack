@@ -103,7 +103,7 @@
 
       <!-- Only rendered once the browser has fired beforeinstallprompt,
            i.e. the app is installable and not already installed -->
-      <v-list-item <v-divider class="my-2" />
+      <v-divider class="my-2" />
 
       <v-list-item
         prepend-icon="mdi-logout"

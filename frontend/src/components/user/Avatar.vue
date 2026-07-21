@@ -14,7 +14,7 @@
 
     <!-- Bottom Row: Nickname + Menu anchor -->
     <v-menu v-model="menu" location="bottom start" :close-on-content-click="true">
-      <template #activator="{ props: menuProps | {} }">
+      <template #activator="{ props: menuProps }">
         <span
           class="text-caption font-weight-bold text-left"
           style="cursor: pointer; white-space: pre-line"

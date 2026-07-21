@@ -16,13 +16,13 @@ const routes = [
     children: [
       {
         path: "/",
-        redirect: () => {
-          const userStore = useUserStore();
-          return userStore.isAuthenticated ? "/dashboard" : "/login";
+        redirect: async () => {
+          const userStore = await useUserStore();
+          return userStore?.isAuthenticated ? "dashboard" : "login";
         },
       },
       {
-        path: "",
+        path: "/",
         component: AuthView,
         children: [
           {
@@ -53,7 +53,7 @@ const routes = [
     component: () => import("@layouts/UserLayout.vue"),
     children: [
       {
-        path: "/dashboard",
+        path: "dashboard",
         name: "dashboard",
         component: () => import("@views/user/Dashboard.vue"),
         meta: { title: "home" },
