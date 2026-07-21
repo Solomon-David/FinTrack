@@ -263,7 +263,9 @@ export const useUserStore = defineStore("user", () => {
 
     return data;
   } catch (err: any) {
-    ...
+     const msg =
+      err.response?.data?.message || err.message || "Failed to fetch user details";
+      error.value = msg;
   } finally {
     isLoading.value = false;
   }
