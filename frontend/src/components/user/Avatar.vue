@@ -61,7 +61,7 @@ const menu = ref(false);
 // receiving `undefined` (when nickname hasn't loaded yet right after
 // login), which was producing malformed DOM during render — the likely
 // cause of the "Failed to execute 'setAttribute'" crash seen on mobile.
-const displayNickname = computed(() => userStore.user?.nickname ?? "");
+const displayNickname = computed(() => userStore?.user?.nickname ?? "");
 
 async function handleLogout() {
   try {

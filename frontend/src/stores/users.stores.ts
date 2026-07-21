@@ -239,23 +239,35 @@ export const useUserStore = defineStore("user", () => {
   }
 
   async function getUserDetails() {
-    isLoading.value = true;
-    error.value = null;
-    try {
-      const response = await userApi.getUserDetails();
-      const { billsSummary: bills, plansSummary: plans } = response.data.data;
-      billsSummary.value = bills;
-      plansSummary.value = plans;
-      saveSummariesToStorage();
-      return response.data.data;
-    } catch (err: any) {
-      const msg =
-        err.response?.data?.message || err.message || "Failed to fetch user details";
-      error.value = msg;
-    } finally {
-      isLoading.value = false;
+  isLoading.value = true;
+  error.value = null;
+
+  try {
+    const response = await userApi.getUserDetails();
+
+    const data = response.data.data;
+
+    if (user.value) {
+      user.value = {
+        ...user.value,
+        ...data,
+      };
+
+      saveUserToStorage(user.value);
     }
+
+    billsSummary.value = data.billsSummary ?? {};
+    plansSummary.value = data.plansSummary ?? {};
+
+    saveSummariesToStorage();
+
+    return data;
+  } catch (err: any) {
+    ...
+  } finally {
+    isLoading.value = false;
   }
+}
 
   async function updateProfile(
     payload: Partial<{
