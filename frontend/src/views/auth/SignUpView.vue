@@ -53,7 +53,7 @@
     </v-text-field>
     <!-- yellow button for sign up -->
     <v-btn
-      class="text-bold text-button text-none bg-primary text-accent py-5 mt-5"
+      class="text-bold text-body-1 text-none bg-primary text-accent py-5 mt-5"
       variant="flat"
       rounded
       block
@@ -66,7 +66,7 @@
       {{ userStore.error }}
     </p>
     <!-- link to login -->
-    <p class="text-center text-caption text-light mt-5">
+    <p class="text-center text-body-2 text-light mt-5">
       Already have an account?
       <a href="" class="text-primary text-bold" @click.prevent="router.push('/login')"
         >Login</a

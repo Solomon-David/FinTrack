@@ -30,8 +30,8 @@
     </v-text-field>
 
     <!-- forgot password link. aligned to the right of the container-->
-    <p class="text-right text-caption text-light">
-      <a href="" class="text-light text-bold" @click.prevent="openDialog = true">
+    <p class="text-right text-body-2 text-light">
+      <a href="" class="text-light" @click.prevent="openDialog = true">
         Forgot Password?</a
       >
     </p>
@@ -41,7 +41,7 @@
 
     <!-- yellow button for login -->
     <v-btn
-      class="text-bold text-button text-none bg-primary text-accent py-5 mt-5"
+      class="text-body-1 text-none bg-primary text-accent py-5 mt-5"
       variant="flat"
       rounded
       block
@@ -54,7 +54,7 @@
       {{ message }}
     </v-alert>
     <!-- link to sign up -->
-    <p class="text-center text-caption text-light mt-5">
+    <p class="text-center text-body-2 text-light mt-5">
       Don't have an account?
       <a href="" class="text-primary text-bold" @click.prevent="router.push('/signup')">
         Sign Up</a

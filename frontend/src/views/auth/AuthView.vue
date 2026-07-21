@@ -18,7 +18,7 @@
     </v-card>
 
     <!-- form -->
-    <v-card class="w-sm-50 w-75 glass rounded-lg py-5" variant="flat">
+    <v-card class="w-sm-50 w-100 w-md-75 glass rounded-lg py-5" variant="flat">
       <router-view></router-view>
     </v-card>
   </v-container>

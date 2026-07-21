@@ -32,7 +32,15 @@ const vuetify = createVuetify({
     },
     display: {
         mobileBreakpoint: "sm"
-    }
+    },
+    // defaults: {
+    //     VBtn: {
+    //         class: "h5"
+    //     },
+    //     p: {
+    //         class: "h2"
+    //     }
+    // }
 });
 
 export default vuetify;

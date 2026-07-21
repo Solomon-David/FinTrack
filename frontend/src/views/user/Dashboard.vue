@@ -87,7 +87,7 @@
         <v-btn
           :color="action.color"
           :prepend-icon="action.icon"
-          class="w-100 text-white font-weight-light px-2 text-capitalize"
+          class="w-100 text-white text-caption font-weight-medium px-2 text-capitalize"
           height="44"
           rounded="lg"
           @click="openDialog(action.label)"

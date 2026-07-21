@@ -17,7 +17,7 @@
       <template #activator="{ props: menuProps }">
         <span
           v-bind="menuProps"
-          class="text-caption font-weight-bold text-left"
+          class="text-body-2 font-weight-bold text-left"
           style="cursor: pointer; white-space: pre-line"
         >
           {{ displayNickname }}
