@@ -4,8 +4,9 @@
 
     <div class="px-4 d-flex flex-column" style="height: calc(100vh - 180px)">
       <div class="d-flex align-center justify-center mb-2 position-relative">
+        <v-spacer />
         <h2 class="text-h6 font-weight-bold">Records</h2>
-        <v-spacer/>
+        <v-spacer />
         <v-btn
           icon="mdi-refresh"
           variant="text"
@@ -65,8 +66,8 @@
             >Generate Summary</v-card-title
           >
           <v-card-text class="pa-0 text-body-2 text-medium-emphasis mb-4">
-            This will generate a summary for the selected period and show it
-            here. It won't be saved to your records.
+            This will generate a summary for the selected period and show it here. It
+            won't be saved to your records.
           </v-card-text>
           <v-row dense>
             <v-col v-for="type in summaryTypes" :key="type" cols="6">

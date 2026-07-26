@@ -28,12 +28,14 @@
 import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "../stores/users.stores";
 import { ref, onMounted, onUnmounted, watch, computed } from "vue";
+import { useTheme } from "vuetify";
 import NavComponent from "@components/shared/NavComponent.vue";
 import ScreenLoader from "@components/shared/ScreenLoader.vue";
 
 const userStore = useUserStore();
 const route = useRoute();
 const router = useRouter();
+const theme = useTheme();
 const routeTitle = ref<string | undefined>(route.meta.title as string | undefined);
 const isLoading = ref(false);
 
@@ -61,9 +63,20 @@ let removeErrorHook: (() => void) | undefined;
 
 onMounted(() => {
   if (!userStore.isAuthenticated) {
-    window.location.href = "/login";
+    router.replace({ name: "login" });
+    return;
   }
   document.title = ` FinTrack | ${titleTxt.value}`;
+
+  // Sync the active theme with the logged-in user's saved preference —
+  // this is the source of truth once authenticated, taking precedence
+  // over whatever localStorage guessed pre-login (relevant when a user
+  // logs in on a new/different device).
+  const savedTheme = userStore.user?.preferredTheme;
+  if (savedTheme === "mainTheme" || savedTheme === "darkTheme") {
+    theme.global.name.value = savedTheme;
+    localStorage.setItem("fintrack-theme", savedTheme);
+  }
 
   removeBeforeGuard = router.beforeEach((to, from, next) => {
     if (to.fullPath !== from.fullPath) {

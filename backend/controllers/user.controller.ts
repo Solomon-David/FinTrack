@@ -7,7 +7,7 @@ import { SendEmailDTO, UserRequest, IUserModel } from '../interfaces';
 import { generateAccessToken, generateRefreshToken, verifyAccessToken, verifyRefreshToken } from "../utils/generateToken";
 import { generateVerificationCode } from "../utils/generateVerificationCode";
 import { hashPassword } from '../config/bcryptjs';
-import BillType from "../models/BillType";
+import Bill from "../models/Bill";
 import Plan from "../models/Plan";
 
 
@@ -125,10 +125,9 @@ export const resendVerificationEmail = async (req: Request, res: Response) => {
 
 const computeUserDetails = async (userId: string) => {
     const [bills, plans] = await Promise.all([
-        BillType.find({ user: userId }),
+        Bill.find({ user: userId }),
         Plan.find({ user: userId })
     ]);
-    
 
     const billsSummary = {
         total: bills.length,
@@ -183,6 +182,8 @@ export const loginUser = async (req: Request, res: Response) => {
                     photoData: user.photoData,
                     tokens: { accessToken, refreshToken },
                     dob: user.dob,
+                    preferredCurrency: user.preferredCurrency,
+                    preferredTheme: user.preferredTheme,
                     billsSummary,
                     plansSummary,
                 }
@@ -357,17 +358,21 @@ export const getUserPhoto = async (req: Request, res: Response) => {
 export const updateProfile = async (req: UserRequest, res: Response): Promise<void> => {
     try {
         const userId = req.user!.userId;
-        const { firstName, lastName, nickname, email } = req.body;
+        const { firstName, lastName, nickname, email, dob, preferredCurrency, preferredTheme } = req.body;
     const updates: { [key: string]: any } = {};
 
     if (firstName !== undefined) updates.firstName = firstName;
     if (lastName !== undefined) updates.lastName = lastName;
     if (nickname !== undefined) updates.nickname = nickname;
     if (email !== undefined) updates.email = email;
+    if (dob !== undefined) updates.dob = dob;
+    if (preferredCurrency !== undefined) updates.preferredCurrency = preferredCurrency;
+    if (preferredTheme !== undefined) updates.preferredTheme = preferredTheme;
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { $set: updates }
+      { $set: updates },
+      { new: true }
     );
 
         if (!updatedUser) {
@@ -386,6 +391,8 @@ export const updateProfile = async (req: UserRequest, res: Response): Promise<vo
                 nickname: updatedUser.nickname,
                 photoData: updatedUser.photoData,
                 dob: updatedUser.dob,
+                preferredCurrency: updatedUser.preferredCurrency,
+                preferredTheme: updatedUser.preferredTheme,
             }
         });
     } catch (error: any) {

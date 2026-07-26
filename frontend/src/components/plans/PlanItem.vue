@@ -11,18 +11,42 @@
       <template #append>
         <div class="d-flex align-center ga-2">
           <div class="d-flex flex-column align-end">
-            <span class="text-body-2 font-weight-bold">{{ progressLabel }}</span>
+            <span class="text-body-1 text-sm-body-2 font-weight-sm-bold">{{
+              progressLabel
+            }}</span>
             <v-chip size="x-small" :color="statusColor" label>{{ plan.status }}</v-chip>
           </div>
           <v-menu>
             <template #activator="{ props: menuProps }">
-              <v-btn icon="mdi-dots-vertical" size="x-small" variant="text" v-bind="menuProps" />
+              <v-btn
+                icon="mdi-dots-vertical"
+                size="x-small"
+                variant="text"
+                v-bind="menuProps"
+              />
             </template>
             <v-list density="compact" rounded="lg" min-width="140">
-              <v-list-item prepend-icon="mdi-cash-plus" title="Update" @click="emit('update', plan)" />
-              <v-list-item prepend-icon="mdi-pencil-outline" title="Edit" @click="emit('edit', plan)" />
-              <v-list-item prepend-icon="mdi-content-copy" title="Duplicate" @click="emit('duplicate', plan)" />
-              <v-list-item prepend-icon="mdi-delete-outline" title="Delete" base-color="error" @click="emit('delete', plan)" />
+              <v-list-item
+                prepend-icon="mdi-cash-plus"
+                title="Update"
+                @click="emit('update', plan)"
+              />
+              <v-list-item
+                prepend-icon="mdi-pencil-outline"
+                title="Edit"
+                @click="emit('edit', plan)"
+              />
+              <v-list-item
+                prepend-icon="mdi-content-copy"
+                title="Duplicate"
+                @click="emit('duplicate', plan)"
+              />
+              <v-list-item
+                prepend-icon="mdi-delete-outline"
+                title="Delete"
+                base-color="error"
+                @click="emit('delete', plan)"
+              />
             </v-list>
           </v-menu>
         </div>
@@ -67,13 +91,35 @@
       <v-col cols="2" class="d-flex justify-end">
         <v-menu>
           <template #activator="{ props: menuProps }">
-            <v-btn icon="mdi-dots-vertical" size="x-small" variant="text" v-bind="menuProps" />
+            <v-btn
+              icon="mdi-dots-vertical"
+              size="x-small"
+              variant="text"
+              v-bind="menuProps"
+            />
           </template>
           <v-list density="compact" rounded="lg" min-width="140">
-            <v-list-item prepend-icon="mdi-cash-plus" title="Update" @click="emit('update', plan)" />
-            <v-list-item prepend-icon="mdi-pencil-outline" title="Edit" @click="emit('edit', plan)" />
-            <v-list-item prepend-icon="mdi-content-copy" title="Duplicate" @click="emit('duplicate', plan)" />
-            <v-list-item prepend-icon="mdi-delete-outline" title="Delete" base-color="error" @click="emit('delete', plan)" />
+            <v-list-item
+              prepend-icon="mdi-cash-plus"
+              title="Update"
+              @click="emit('update', plan)"
+            />
+            <v-list-item
+              prepend-icon="mdi-pencil-outline"
+              title="Edit"
+              @click="emit('edit', plan)"
+            />
+            <v-list-item
+              prepend-icon="mdi-content-copy"
+              title="Duplicate"
+              @click="emit('duplicate', plan)"
+            />
+            <v-list-item
+              prepend-icon="mdi-delete-outline"
+              title="Delete"
+              base-color="error"
+              @click="emit('delete', plan)"
+            />
           </v-list>
         </v-menu>
       </v-col>

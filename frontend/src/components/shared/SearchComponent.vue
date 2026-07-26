@@ -11,8 +11,8 @@
           rounded="xl"
           size="large"
           append-icon="mdi-menu-down"
-          class="text-none bg-secondary my-none mx-none"
-          style="min-width: 140px"
+          class="text-none bg-secondary my-none mx-none w-25"
+          style="min-width: 33vw"
           v-bind="menuProps"
         >
           {{ selectedFilter || filters[0] }}
@@ -39,7 +39,7 @@
       density="comfortable"
       rounded="xl"
       hide-details
-      class="flex-grow-1"
+      class="flex-grow-1 pb-2 pe-2 pt-0"
       append-inner-icon="mdi-magnify"
       @update:model-value="onSearch"
     />

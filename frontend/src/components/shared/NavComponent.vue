@@ -4,7 +4,7 @@
     <v-app-bar-nav-icon class="text-h5" @click="openMenu = !openMenu" />
 
     <v-app-bar-title
-      class="text-title-medium text-md-title font-weight-bold text-black text-center flex-grow-1"
+      class="text-title-medium text-md-title font-weight-bold text-dark text-center flex-grow-1"
       style="white-space: normal"
       >{{ props.title }}</v-app-bar-title
     >

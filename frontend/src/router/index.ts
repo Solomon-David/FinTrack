@@ -18,7 +18,7 @@ const routes = [
         path: "/",
         redirect: () => {
           const userStore = useUserStore();
-          return userStore?.isAuthenticated ? "/dashboard" : "/login";
+          return userStore.isAuthenticated ? "/dashboard" : "/login";
         },
       },
       {
@@ -103,7 +103,7 @@ const routes = [
       {
         path: "/preferences",
         name: "preferences",
-        component: () => import("@views/user/Dashboard.vue"),
+        component: () => import("@views/user/Preferences.vue"),
         meta: { title: "Preferences" },
       },
     ],

@@ -1,4 +1,5 @@
 import axiosInstance from '@/utils/axios';
+import type { User } from '../types';
 
 export async function signUp(payload: { email: string; password: string; firstName: string; lastName: string; }) {
   return axiosInstance.post('/auth/signup', payload);
@@ -42,6 +43,8 @@ export async function updateProfile(payload: Partial<{
   nickname?: string;
   email: string;
   dob?: string;
+  preferredCurrency?: string;
+  preferredTheme?: string;
 }>) {
   return axiosInstance.patch('/users/update-profile', payload);
 }

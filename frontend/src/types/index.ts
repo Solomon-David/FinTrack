@@ -17,6 +17,7 @@ export interface User {
   isVerified: boolean;
   dob?: Date;
   preferredCurrency?: string;
+  preferredTheme?: "mainTheme" | "darkTheme";
   billsSummary?: Record<string, number>;
   plansSummary?: Record<string, number>;
 }

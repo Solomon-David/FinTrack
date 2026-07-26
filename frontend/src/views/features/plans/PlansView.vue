@@ -6,7 +6,7 @@
       <div class="d-flex align-center justify-space-between mb-2">
         <v-spacer />
         <h2 class="text-h6 font-weight-bold">Plans</h2>
-        <v-spacer/>
+        <v-spacer />
         <v-btn
           icon="mdi-refresh"
           variant="text"
@@ -33,7 +33,10 @@
           />
         </div>
 
-        <div v-if="!planStore.isLoading && filteredPlans.length === 0" class="text-center py-10">
+        <div
+          v-if="!planStore.isLoading && filteredPlans.length === 0"
+          class="text-center py-10"
+        >
           <v-icon size="48" color="grey-lighten-1">mdi-bag-checked</v-icon>
           <p class="text-medium-emphasis mt-2">No plans found</p>
         </div>
@@ -173,7 +176,10 @@ const filteredPlans = computed(() => {
       if (!plan.dueDate) return false;
       const date = new Date(plan.dueDate);
       const full = date.toLocaleDateString("en-GB");
-      const monthYear = `${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
+      const monthYear = `${String(date.getMonth() + 1).padStart(
+        2,
+        "0"
+      )}/${date.getFullYear()}`;
       return full.includes(q) || monthYear.includes(q);
     }
     return true;
