@@ -60,7 +60,7 @@
             <v-text-field
               v-model="entry.amount.amount"
               variant="outlined"
-              label="Amount (₦)"
+              :label="`Amount (${symbol})`"
               type="number"
               step="100"
               density="comfortable"
@@ -170,7 +170,9 @@ import { useUserStore } from "@/stores/users.stores";
 import { useRCDataStore } from "@/stores/rcdata.store";
 import DialogHeaderComponent from "@/components/shared/DialogHeaderComponent.vue";
 import type { RCDataEntry } from "@/types";
+import { useCurrency } from "@/composables/useCurrency.ts";
 
+const { symbol } = useCurrency();
 const props = defineProps<{ initialEntry?: Partial<RCDataEntry> }>();
 const open = defineModel<boolean>({ required: true });
 

@@ -20,7 +20,7 @@
       </div>
 
       <!-- Scrollable list -->
-      <div ref="listContainer" class="overflow-y-auto flex-grow-1 bg-bluegrey">
+      <div class="overflow-y-auto flex-grow-1 bg-bluegrey">
         <div v-for="(group, date) in groupedIncomes" :key="date" class="mb-4">
           <IncomeItem
             v-for="income in group"
@@ -31,7 +31,7 @@
             @delete="confirmDelete"
           />
           <div class="text-center text-caption font-weight-bold py-1">
-            Total: ₦{{ groupTotal(group) }}
+            Total: {{ groupTotal(group) }}
           </div>
         </div>
 
@@ -97,15 +97,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  ref,
-  computed,
-  onMounted,
-  defineAsyncComponent,
-  shallowRef,
-  watch,
-  nextTick,
-} from "vue";
+import { ref, computed, onMounted, defineAsyncComponent, shallowRef, watch } from "vue";
 import { useIncomeStore } from "@/stores/income.store";
 import type { Income } from "@/stores/income.store";
 import type { IncomeEntry } from "@/types";
@@ -113,6 +105,7 @@ import IncomeItem from "@/components/income/IncomeItem.vue";
 import SearchComponent from "@/components/shared/SearchComponent.vue";
 import IncomeEditDialog from "@/components/income/IncomeEditDialog.vue";
 import LoadingDialog from "@/components/shared/LoadingDialog.vue";
+import { formatCurrency } from "@/composables/useCurrency";
 
 const incomeStore = useIncomeStore();
 
@@ -126,11 +119,6 @@ const searchFilter = ref("Sender");
 
 const filters = ["Sender", "Purpose", "Amount", "Date"];
 
-const listContainer = ref<HTMLElement | null>(null);
-
-// Typed as `any` because the async-loaded dialog component's prop shape
-// varies by which quick-action opened it, and Vue's DefineComponent
-// generics don't unify cleanly across those shapes for a single ref.
 const AddIncomeDialog = shallowRef<any>(null);
 
 function openAddDialog() {
@@ -162,7 +150,6 @@ function openDuplicate(income: Income) {
   addDialog.value = true;
 }
 
-// Clear duplicate entry when dialog closes
 watch(addDialog, (isOpen) => {
   if (!isOpen) duplicateEntry.value = undefined;
 });
@@ -171,8 +158,6 @@ onMounted(() => load());
 
 async function load() {
   await incomeStore.getIncomes();
-
-   await scrollToBottom();
 }
 
 const filteredIncomes = computed(() => {
@@ -193,13 +178,6 @@ const filteredIncomes = computed(() => {
   });
 });
 
-watch(
-  () => filteredIncomes.value.length,
-  async () => {
-    await scrollToBottom();
-  }
-);
-
 const groupedIncomes = computed(() => {
   return filteredIncomes.value.reduce((groups, income) => {
     const date = new Date(income.date).toLocaleDateString("en-GB");
@@ -210,7 +188,8 @@ const groupedIncomes = computed(() => {
 });
 
 function groupTotal(group: Income[]) {
-  return group.reduce((sum, i) => sum + i.amount, 0).toLocaleString("en-NG");
+  const total = group.reduce((sum, i) => sum + i.amount, 0);
+  return formatCurrency(total, group[0]?.currency);
 }
 
 function handleSearch(query: string, filter: string) {
@@ -233,16 +212,5 @@ async function handleDelete() {
   await incomeStore.deleteIncome(selectedIncome.value._id);
   deleteDialog.value = false;
   selectedIncome.value = null;
-
-  await scrollToBottom();
-}
-
-async function scrollToBottom() {
-  await nextTick();
-
-  listContainer.value?.scrollTo({
-    top: listContainer.value.scrollHeight,
-    behavior: "smooth",
-  });
 }
 </script>

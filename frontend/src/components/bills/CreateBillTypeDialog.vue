@@ -1,6 +1,8 @@
 <template>
   <v-dialog v-model="open" class="w-xs-75 w-sm-66" scrim="true">
-    <v-container class="px-6 pb-5 pt-1 bg-light rounded-lg d-flex flex-column gap-3 overflow-y-auto">
+    <v-container
+      class="px-6 pb-5 pt-1 bg-light rounded-lg d-flex flex-column gap-3 overflow-y-auto"
+    >
       <DialogHeaderComponent title="Create Bill Type" v-model="open" />
 
       <v-form>
@@ -27,7 +29,7 @@
           <v-text-field
             v-model="entry.total"
             variant="outlined"
-            label="Total Owed Per Cycle (₦)"
+            :label="`Total Owed Per Cycle (${symbol})`"
             type="number"
             density="comfortable"
           >
@@ -53,7 +55,10 @@
             density="comfortable"
           />
 
-          <v-row dense v-if="entry.recurrence !== 'One-time' && entry.recurrence !== 'Daily'">
+          <v-row
+            dense
+            v-if="entry.recurrence !== 'One-time' && entry.recurrence !== 'Daily'"
+          >
             <v-col cols="12">
               <v-select
                 v-if="entry.recurrence === 'Weekly'"
@@ -132,7 +137,13 @@
         {{ entries.length > 1 ? `Submit (${entries.length})` : `Submit` }}
       </v-btn>
 
-      <v-snackbar v-model="snackbar.show" :color="snackbar.color" rounded="lg" timeout="2500" location="bottom">
+      <v-snackbar
+        v-model="snackbar.show"
+        :color="snackbar.color"
+        rounded="lg"
+        timeout="2500"
+        location="bottom"
+      >
         {{ snackbar.message }}
       </v-snackbar>
     </v-container>
@@ -145,7 +156,9 @@ import { useUserStore } from "@/stores/users.stores";
 import { useBillTypeStore } from "@/stores/billtype.store";
 import DialogHeaderComponent from "@/components/shared/DialogHeaderComponent.vue";
 import type { BillTypeEntry } from "@/types";
+import { useCurrency } from "@/composables/useCurrency.ts";
 
+const { symbol } = useCurrency();
 const props = defineProps<{ initialEntry?: Partial<BillTypeEntry> }>();
 const open = defineModel<boolean>({ required: true });
 
@@ -157,15 +170,27 @@ const snackbar = reactive({ show: false, message: "", color: "success" });
 const types = ["Electricity", "Accommodation", "Subscription", "Insurance", "Other"];
 const recurrences = ["One-time", "Daily", "Weekly", "Monthly", "Yearly"];
 const weekDays = [
-  { label: "Sunday", value: 0 }, { label: "Monday", value: 1 }, { label: "Tuesday", value: 2 },
-  { label: "Wednesday", value: 3 }, { label: "Thursday", value: 4 }, { label: "Friday", value: 5 },
+  { label: "Sunday", value: 0 },
+  { label: "Monday", value: 1 },
+  { label: "Tuesday", value: 2 },
+  { label: "Wednesday", value: 3 },
+  { label: "Thursday", value: 4 },
+  { label: "Friday", value: 5 },
   { label: "Saturday", value: 6 },
 ];
 const months = [
-  { label: "January", value: 1 }, { label: "February", value: 2 }, { label: "March", value: 3 },
-  { label: "April", value: 4 }, { label: "May", value: 5 }, { label: "June", value: 6 },
-  { label: "July", value: 7 }, { label: "August", value: 8 }, { label: "September", value: 9 },
-  { label: "October", value: 10 }, { label: "November", value: 11 }, { label: "December", value: 12 },
+  { label: "January", value: 1 },
+  { label: "February", value: 2 },
+  { label: "March", value: 3 },
+  { label: "April", value: 4 },
+  { label: "May", value: 5 },
+  { label: "June", value: 6 },
+  { label: "July", value: 7 },
+  { label: "August", value: 8 },
+  { label: "September", value: 9 },
+  { label: "October", value: 10 },
+  { label: "November", value: 11 },
+  { label: "December", value: 12 },
 ];
 
 function createEntry(): BillTypeEntry {
@@ -184,7 +209,7 @@ const entries = ref<BillTypeEntry[]>([createEntry()]);
 
 watch(
   () => [open.value, props.initialEntry],
-  ([isOpen]) => { 
+  ([isOpen]) => {
     if (isOpen) entries.value = [createEntry()];
     else {
       entries.value = [createEntry()];
@@ -193,12 +218,17 @@ watch(
   }
 );
 
-
-function addEntry() { entries.value.push(createEntry()); }
-function removeEntry(index: number) { if (entries.value.length > 1) entries.value.splice(index, 1); }
+function addEntry() {
+  entries.value.push(createEntry());
+}
+function removeEntry(index: number) {
+  if (entries.value.length > 1) entries.value.splice(index, 1);
+}
 
 function showSnackbar(message: string, color: string) {
-  snackbar.message = message; snackbar.color = color; snackbar.show = true;
+  snackbar.message = message;
+  snackbar.color = color;
+  snackbar.show = true;
 }
 
 async function submit() {
@@ -206,7 +236,9 @@ async function submit() {
   try {
     await billTypeStore.addBillType(entries.value);
     showSnackbar(
-      entries.value.length > 1 ? `${entries.value.length} bill types created!` : "Bill type created!",
+      entries.value.length > 1
+        ? `${entries.value.length} bill types created!`
+        : "Bill type created!",
       "success"
     );
     setTimeout(() => {

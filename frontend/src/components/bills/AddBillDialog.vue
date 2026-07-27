@@ -31,7 +31,7 @@
               <v-text-field
                 v-model="entry.amount"
                 variant="outlined"
-                label="Amount Paid (₦)"
+                :label="Amount Paid (${symbol})"
                 type="number"
                 density="comfortable"
               >
@@ -55,7 +55,7 @@
               <v-text-field
                 v-model="entry.total"
                 variant="outlined"
-                label="Total Owed (₦)"
+                :label="Total Owed (${symbol})"
                 type="number"
                 density="comfortable"
               >
@@ -198,7 +198,9 @@ import { useUserStore } from "@/stores/users.stores";
 import { useBillStore } from "@/stores/bill.store";
 import DialogHeaderComponent from "@/components/shared/DialogHeaderComponent.vue";
 import type { BillEntry } from "@/types";
+import { symbol } from "@/composables/useCurrency.ts";
 
+const { symbol } = useCurrency();
 const props = defineProps<{ initialEntry?: Partial<BillEntry> }>();
 const open = defineModel<boolean>({ required: true });
 
@@ -207,19 +209,38 @@ const billStore = useBillStore();
 const loading = ref(false);
 const snackbar = reactive({ show: false, message: "", color: "success" });
 
-const types = ["Electricity", "Accommodation", "Subscription", "Insurance", "Utility", "Other"];
+const types = [
+  "Electricity",
+  "Accommodation",
+  "Subscription",
+  "Insurance",
+  "Utility",
+  "Other",
+];
 const recurrences = ["One-time", "Daily", "Weekly", "Monthly", "Yearly"];
 
 const weekDays = [
-  { label: "Sunday", value: 0 }, { label: "Monday", value: 1 }, { label: "Tuesday", value: 2 },
-  { label: "Wednesday", value: 3 }, { label: "Thursday", value: 4 }, { label: "Friday", value: 5 },
+  { label: "Sunday", value: 0 },
+  { label: "Monday", value: 1 },
+  { label: "Tuesday", value: 2 },
+  { label: "Wednesday", value: 3 },
+  { label: "Thursday", value: 4 },
+  { label: "Friday", value: 5 },
   { label: "Saturday", value: 6 },
 ];
 const months = [
-  { label: "January", value: 1 }, { label: "February", value: 2 }, { label: "March", value: 3 },
-  { label: "April", value: 4 }, { label: "May", value: 5 }, { label: "June", value: 6 },
-  { label: "July", value: 7 }, { label: "August", value: 8 }, { label: "September", value: 9 },
-  { label: "October", value: 10 }, { label: "November", value: 11 }, { label: "December", value: 12 },
+  { label: "January", value: 1 },
+  { label: "February", value: 2 },
+  { label: "March", value: 3 },
+  { label: "April", value: 4 },
+  { label: "May", value: 5 },
+  { label: "June", value: 6 },
+  { label: "July", value: 7 },
+  { label: "August", value: 8 },
+  { label: "September", value: 9 },
+  { label: "October", value: 10 },
+  { label: "November", value: 11 },
+  { label: "December", value: 12 },
 ];
 
 function createEntry(): BillEntry {
@@ -240,7 +261,9 @@ const entries = ref<BillEntry[]>([createEntry()]);
 
 watch(
   () => [open.value, props.initialEntry],
-  ([isOpen]) => { if (isOpen) entries.value = [createEntry()]; }
+  ([isOpen]) => {
+    if (isOpen) entries.value = [createEntry()];
+  }
 );
 
 function addEntry() {

@@ -33,13 +33,13 @@
     <div class="d-flex justify-space-between py-1">
       <span class="text-body-2">Income</span>
       <span class="text-body-2 font-weight-bold text-success">
-        ₦{{ get("Income").toLocaleString("en-NG") }}
+        {{ formatCurrency(get("Income"), summary.currency) }}
       </span>
     </div>
     <div class="d-flex justify-space-between py-1">
       <span class="text-body-2">Expenses</span>
       <span class="text-body-2 font-weight-bold text-error">
-        ₦{{ get("Expenses").toLocaleString("en-NG") }}
+        {{ formatCurrency(get("Expenses"), summary.currency) }}
       </span>
     </div>
 
@@ -51,7 +51,7 @@
           class="text-body-2 font-weight-bold"
           :class="get('Difference') >= 0 ? 'text-success' : 'text-error'"
         >
-          ₦{{ get("Difference").toLocaleString("en-NG") }}
+          {{ formatCurrency(get("Difference"), summary.currency) }}
         </span>
       </div>
       <div class="d-flex justify-space-between py-1">
@@ -63,7 +63,7 @@
         <span class="text-body-2 font-weight-bold">
           {{ get("BillsPaid") }}/{{ get("BillsTotal") }}
           <span v-if="get('BillsAmountDue') > 0" class="text-error">
-            (₦{{ get("BillsAmountDue").toLocaleString("en-NG") }})
+            ({{ formatCurrency(get("BillsAmountDue"), summary.currency) }})
           </span>
         </span>
       </div>
@@ -83,6 +83,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import type { Summary } from "@/stores/summary.store";
+import { formatCurrency } from "@/composables/useCurrency";
 
 const props = defineProps<{ summary: Summary }>();
 const emit = defineEmits<{
@@ -114,7 +115,7 @@ const formattedRCData = computed(() => {
   const dataMB = get("DataMB");
   const dataGB = (dataMB / 1024).toFixed(1);
   const parts = [];
-  if (airtime > 0) parts.push(`₦${airtime.toLocaleString("en-NG")}`);
+  if (airtime > 0) parts.push(formatCurrency(airtime, props.summary.currency));
   if (dataMB > 0) parts.push(`${dataGB}GB`);
   return parts.join("/") || "—";
 });

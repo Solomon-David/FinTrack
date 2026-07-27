@@ -17,7 +17,7 @@
         <v-text-field
           v-model="form.amount"
           variant="outlined"
-          label="Amount (₦)"
+          :label="`Amount (${symbol})`"
           type="number"
           step="1000"
           density="comfortable"
@@ -98,7 +98,9 @@ import { ref, reactive, watch } from "vue";
 import { useIncomeStore } from "@/stores/income.store";
 import type { Income } from "@/stores/income.store";
 import DialogHeaderComponent from "@/components/shared/DialogHeaderComponent.vue";
+import { useCurrency } from "@/composables/useCurrency.ts";
 
+const { symbol } = useCurrency();
 const open = defineModel<boolean>({ required: true });
 const props = defineProps<{ income: Income | null }>();
 const emit = defineEmits<{ updated: [] }>();

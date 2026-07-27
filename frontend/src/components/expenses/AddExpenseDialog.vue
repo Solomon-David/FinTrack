@@ -30,7 +30,7 @@
           <v-text-field
             v-model="entry.amount"
             variant="outlined"
-            label="Amount (₦)"
+            :label="`Amount (${symbol})`"
             type="number"
             step="1000"
             density="comfortable"
@@ -81,7 +81,9 @@
               <template #item="{ props: itemProps, item }">
                 <v-list-item
                   v-bind="itemProps"
-                  :subtitle="`₦${item.raw.amountPaid}/₦${item.raw.total} • ${item.raw.status}`"
+                  :subtitle="`${symbol.join(item.raw.amountPaid)}/${symbol.join(
+                    item.raw.total
+                  )} • ${item.raw.status}`"
                 />
               </template>
             </v-select>
@@ -90,7 +92,8 @@
               v-if="selectedBillType(entry)"
               class="text-caption text-medium-emphasis mb-2"
             >
-              Remaining: ₦{{ (selectedBillType(entry)!.total - selectedBillType(entry)!.amountPaid).toLocaleString('en-NG') }}
+              Remaining: {{ symbol
+              }}{{ (selectedBillType(entry)!.total - selectedBillType(entry)!.amountPaid).toLocaleString('en-NG') }}
             </div>
 
             <v-text-field
@@ -162,7 +165,9 @@ import { useExpenseStore } from "@/stores/expense.store";
 import DialogHeaderComponent from "@/components/shared/DialogHeaderComponent.vue";
 import type { ExpenseEntry } from "@/types";
 import { useBillTypeStore } from "@/stores/billtype.store";
+import { useCurrency } from "@/composables/useCurrency.ts";
 
+const { symbol } = useCurrency();
 const snackbar = reactive({ show: false, message: "", color: "success" });
 
 function showSnackbar(message: string, color: string) {

@@ -38,7 +38,7 @@
             v-if="!entry.targetUnknown"
             v-model="entry.targetAmount"
             variant="outlined"
-            label="Target Amount (₦)"
+            :label="`Target Amount (${symbol})`"
             type="number"
             density="comfortable"
           >
@@ -63,7 +63,7 @@
           <v-text-field
             v-model="entry.progress"
             variant="outlined"
-            label="Amount Saved So Far (₦)"
+            :label="`Amount Saved So Far (${symbol})`"
             type="number"
             density="comfortable"
           >
@@ -147,7 +147,9 @@ import { useUserStore } from "@/stores/users.stores";
 import { usePlanStore } from "@/stores/plan.store";
 import DialogHeaderComponent from "@/components/shared/DialogHeaderComponent.vue";
 import type { PlanEntry } from "@/types";
+import { useCurrency } from "@/composables/useCurrency.ts";
 
+const { symbol } = useCurrency();
 const props = defineProps<{ initialEntry?: Partial<PlanEntry> }>();
 const open = defineModel<boolean>({ required: true });
 

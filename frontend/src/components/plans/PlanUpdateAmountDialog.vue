@@ -6,9 +6,9 @@
       <div class="mb-2" v-if="plan">
         <div class="font-weight-bold text-body-1">{{ plan.name }}</div>
         <div class="text-caption text-medium-emphasis">
-          Currently saved: ₦{{ Number(plan.progress).toLocaleString("en-NG") }}
+          Currently saved: {{symbol}}{{ Number(plan.progress).toLocaleString("en-NG") }}
           <span v-if="plan.targetAmount !== 'Unknown'">
-            / ₦{{ Number(plan.targetAmount).toLocaleString("en-NG") }}
+            / {{symbol}}{{ Number(plan.targetAmount).toLocaleString("en-NG") }}
           </span>
         </div>
       </div>
@@ -17,7 +17,7 @@
         <v-text-field
           v-model="amountToAdd"
           variant="outlined"
-          label="Amount to Add (₦)"
+          :label="`Amount to Add (${symbol})`"
           type="number"
           density="comfortable"
           color="secondary"
@@ -39,7 +39,7 @@
       </v-form>
 
       <div v-if="newTotal !== null" class="text-caption text-medium-emphasis">
-        New total: ₦{{ newTotal.toLocaleString("en-NG") }}
+        New total: {{ symbol.join(newTotal.toLocaleString("en-NG")) }}
       </div>
 
       <v-row dense>
@@ -84,7 +84,9 @@ import { ref, reactive, computed, watch } from "vue";
 import { usePlanStore } from "@/stores/plan.store";
 import type { Plan } from "@/stores/plan.store";
 import DialogHeaderComponent from "@/components/shared/DialogHeaderComponent.vue";
+import { useCurrency } from "@/composables/useCurrency.ts";
 
+const { symbol } = useCurrency();
 const open = defineModel<boolean>({ required: true });
 const props = defineProps<{ plan: Plan | null }>();
 const emit = defineEmits<{ updated: [] }>();

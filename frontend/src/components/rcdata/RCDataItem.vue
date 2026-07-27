@@ -102,6 +102,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import type { RCData } from "@/stores/rcdata.store";
+import { formatCurrency } from "@/composables/useCurrency";
 
 const props = defineProps<{ record: RCData }>();
 const emit = defineEmits<{
@@ -121,7 +122,7 @@ const formattedDate = computed(() =>
 const formattedAmount = computed(() => {
   const { amount, size } = props.record.amount;
   return props.record.type === "airtime"
-    ? `₦${Number(amount).toLocaleString("en-NG")}`
+    ? formatCurrency(amount, props.record.amount.currency ?? props.record.currency)
     : `${amount}${size}`;
 });
 

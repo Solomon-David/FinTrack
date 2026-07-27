@@ -6,7 +6,7 @@
       <div class="d-flex align-center justify-space-between mb-2">
         <v-spacer />
         <h2 class="text-h6 font-weight-bold">Records</h2>
-        <v-spacer/>
+        <v-spacer />
         <v-btn
           icon="mdi-refresh"
           variant="text"
@@ -17,7 +17,7 @@
         />
       </div>
 
-      <div ref="listContainer" class="overflow-y-auto flex-grow-1">
+      <div class="overflow-y-auto flex-grow-1">
         <div v-for="(group, date) in groupedExpenses" :key="date" class="mb-4">
           <ExpenseItem
             v-for="expense in group"
@@ -28,7 +28,7 @@
             @delete="confirmDelete"
           />
           <div class="text-center text-caption font-weight-bold py-1">
-            Total: ₦{{ groupTotal(group) }}
+            Total: {{ groupTotal(group) }}
           </div>
         </div>
 
@@ -86,15 +86,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  ref,
-  computed,
-  onMounted,
-  defineAsyncComponent,
-  shallowRef,
-  watch,
-  nextTick,
-} from "vue";
+import { ref, computed, onMounted, defineAsyncComponent, shallowRef, watch } from "vue";
 import { useExpenseStore } from "@/stores/expense.store";
 import type { Expense } from "@/stores/expense.store";
 import type { ExpenseEntry } from "@/types";
@@ -102,6 +94,7 @@ import ExpenseItem from "@/components/expenses/ExpenseItem.vue";
 import SearchComponent from "@/components/shared/SearchComponent.vue";
 import ExpenseEditDialog from "@/components/expenses/ExpenseEditDialog.vue";
 import LoadingDialog from "@/components/shared/LoadingDialog.vue";
+import { formatCurrency } from "@/composables/useCurrency";
 
 const expenseStore = useExpenseStore();
 
@@ -115,11 +108,6 @@ const searchFilter = ref("Item");
 
 const filters = ["Item", "Vendor", "Amount", "Date"];
 
-const listContainer = ref<HTMLElement | null>(null);
-
-// Typed as `any` because the async-loaded dialog component's prop shape
-// varies by which quick-action opened it, and Vue's DefineComponent
-// generics don't unify cleanly across those shapes for a single ref.
 const AddExpenseDialog = shallowRef<any>(null);
 
 function openAddDialog() {
@@ -161,8 +149,6 @@ onMounted(() => load());
 
 async function load() {
   await expenseStore.getExpenses();
-
-   await scrollToBottom();
 }
 
 const filteredExpenses = computed(() => {
@@ -183,13 +169,6 @@ const filteredExpenses = computed(() => {
   });
 });
 
-watch(
-  () => filteredExpenses.value.length,
-  async () => {
-    await scrollToBottom();
-  }
-);
-
 const groupedExpenses = computed(() => {
   return filteredExpenses.value.reduce((groups, expense) => {
     const date = new Date(expense.date).toLocaleDateString("en-GB");
@@ -199,8 +178,13 @@ const groupedExpenses = computed(() => {
   }, {} as Record<string, Expense[]>);
 });
 
+// Assumes all entries within a single date group share the same currency
+// (true in practice, since currency is tied to the user's preference at
+// time of entry, which rarely changes day-to-day) — uses the first
+// entry's currency for the group total's symbol.
 function groupTotal(group: Expense[]) {
-  return group.reduce((sum, e) => sum + e.amount, 0).toLocaleString("en-NG");
+  const total = group.reduce((sum, e) => sum + e.amount, 0);
+  return formatCurrency(total, group[0]?.currency);
 }
 
 function handleSearch(query: string, filter: string) {
@@ -223,16 +207,5 @@ async function handleDelete() {
   await expenseStore.deleteExpense(selectedExpense.value._id);
   deleteDialog.value = false;
   selectedExpense.value = null;
-
-  await scrollToBottom();
-}
-
-async function scrollToBottom() {
-  await nextTick();
-
-  listContainer.value?.scrollTo({
-    top: listContainer.value.scrollHeight,
-    behavior: "smooth",
-  });
 }
 </script>

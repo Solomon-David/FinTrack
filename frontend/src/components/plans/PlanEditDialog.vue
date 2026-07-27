@@ -36,7 +36,7 @@
           v-if="!form.targetUnknown"
           v-model="form.targetAmount"
           variant="outlined"
-          label="Target Amount (₦)"
+          :label="`Target Amount (${symbol})`"
           type="number"
           density="comfortable"
           color="secondary"
@@ -45,7 +45,7 @@
         <v-text-field
           v-model="form.progress"
           variant="outlined"
-          label="Amount Saved So Far (₦)"
+          :label="`Amount Saved So Far (${symbol})`"
           type="number"
           density="comfortable"
           color="secondary"
@@ -114,7 +114,9 @@ import { ref, reactive, watch } from "vue";
 import { usePlanStore } from "@/stores/plan.store";
 import type { Plan } from "@/stores/plan.store";
 import DialogHeaderComponent from "@/components/shared/DialogHeaderComponent.vue";
+import { useCurrency } from "@/composables/useCurrency.ts";
 
+const { symbol } = useCurrency();
 const open = defineModel<boolean>({ required: true });
 const props = defineProps<{ plan: Plan | null }>();
 const emit = defineEmits<{ updated: [] }>();

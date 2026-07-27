@@ -27,7 +27,7 @@
           <v-text-field
             v-model="form.total"
             variant="outlined"
-            label="Total Owed Per Cycle (₦)"
+            :label="`Total Owed Per Cycle (${symbol})`"
             type="number"
             density="comfortable"
             color="secondary"
@@ -158,7 +158,9 @@ import { ref, reactive, watch } from "vue";
 import { useBillTypeStore } from "@/stores/billtype.store";
 import type { BillType } from "@/stores/billtype.store";
 import DialogHeaderComponent from "@/components/shared/DialogHeaderComponent.vue";
+import { useCurrency } from "@/composables/useCurrency.ts";
 
+const { symbol } = useCurrency();
 const open = defineModel<boolean>({ required: true });
 const props = defineProps<{ bill: BillType | null }>();
 const emit = defineEmits<{ updated: [] }>();
@@ -246,7 +248,6 @@ watch(open, (isOpen) => {
     snackbar.show = false;
   }
 });
-
 
 async function submit() {
   const { valid } = await formRef.value.validate();

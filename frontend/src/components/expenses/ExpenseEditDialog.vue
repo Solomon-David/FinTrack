@@ -15,7 +15,7 @@
         <v-text-field
           v-model="form.amount"
           variant="outlined"
-          label="Amount (₦)"
+          :label="`Amount (${symbol})`"
           type="number"
           step="1000"
           density="comfortable"
@@ -62,7 +62,15 @@
 
       <v-row dense>
         <v-col cols="6">
-          <v-btn variant="tonal" color="error" block rounded="lg" height="44" class="text-none" @click="open = false">
+          <v-btn
+            variant="tonal"
+            color="error"
+            block
+            rounded="lg"
+            height="44"
+            class="text-none"
+            @click="open = false"
+          >
             Cancel
           </v-btn>
         </v-col>
@@ -94,7 +102,9 @@ import { ref, reactive, watch } from "vue";
 import { useExpenseStore } from "@/stores/expense.store";
 import type { Expense } from "@/stores/expense.store";
 import DialogHeaderComponent from "@/components/shared/DialogHeaderComponent.vue";
+import { useCurrency } from "@/composables/useCurrency.ts";
 
+const { symbol } = useCurrency();
 const open = defineModel<boolean>({ required: true });
 const props = defineProps<{ expense: Expense | null }>();
 const emit = defineEmits<{ updated: [] }>();
@@ -146,7 +156,6 @@ watch(open, (isOpen) => {
   }
 });
 
-
 async function submit() {
   const { valid } = await formRef.value.validate();
   if (!valid || !props.expense) return;
@@ -162,7 +171,9 @@ async function submit() {
     });
     showSnackbar("Expense updated successfully!", "success");
     emit("updated");
-    setTimeout(() => { open.value = false; }, 1000);
+    setTimeout(() => {
+      open.value = false;
+    }, 1000);
   } catch (err: any) {
     showSnackbar(err.message || "Failed to update expense.", "error");
   }

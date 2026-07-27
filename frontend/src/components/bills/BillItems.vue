@@ -4,51 +4,24 @@
     <v-list-item class="px-0 py-2 d-sm-none">
       <template #prepend>
         <div class="d-flex flex-column justify-center mr-3">
-          <span class="text-caption text-medium-emphasis">{{ bill.recurrence }}</span>
-          <div class="mt-1 d-flex ga-2">
-            <v-chip size="x-small" text-color="white">
-              ₦{{ Number(bill.amountPaid).toLocaleString("en-NG") }} / ₦{{
-                Number(bill.total).toLocaleString("en-NG")
-              }}
-            </v-chip>
-            <v-chip size="x-small" :color="statusColor" text-color="white">{{
-              bill.status
-            }}</v-chip>
-          </div>
+          <span class="text-caption text-medium-emphasis">{{ formattedDate }}</span>
+          <span class="font-weight-bold text-body-2">{{ formattedAmount }}</span>
         </div>
       </template>
       <template #append>
         <div class="d-flex align-center ga-2">
           <div class="d-flex flex-column align-end">
             <span class="text-body-2 font-weight-bold">{{ bill.name }}</span>
-            <span class="text-caption text-medium-emphasis">{{ bill.type }}</span>
+            <v-chip size="x-small" :color="statusColor" label>{{ bill.status }}</v-chip>
           </div>
           <v-menu>
             <template #activator="{ props: menuProps }">
-              <v-btn
-                icon="mdi-dots-vertical"
-                size="x-small"
-                variant="text"
-                v-bind="menuProps"
-              />
+              <v-btn icon="mdi-dots-vertical" size="x-small" variant="text" v-bind="menuProps" />
             </template>
             <v-list density="compact" rounded="lg" min-width="140">
-              <v-list-item
-                prepend-icon="mdi-pencil-outline"
-                title="Edit"
-                @click="emit('edit', bill)"
-              />
-              <v-list-item
-                prepend-icon="mdi-content-copy"
-                title="Duplicate"
-                @click="emit('duplicate', bill)"
-              />
-              <v-list-item
-                prepend-icon="mdi-delete-outline"
-                title="Delete"
-                base-color="error"
-                @click="emit('delete', bill)"
-              />
+              <v-list-item prepend-icon="mdi-pencil-outline" title="Edit" @click="emit('edit', bill)" />
+              <v-list-item prepend-icon="mdi-content-copy" title="Duplicate" @click="emit('duplicate', bill)" />
+              <v-list-item prepend-icon="mdi-delete-outline" title="Delete" base-color="error" @click="emit('delete', bill)" />
             </v-list>
           </v-menu>
         </div>
@@ -58,23 +31,19 @@
     <!-- Tablet and above layout -->
     <v-row align="center" class="d-none d-sm-flex px-2 py-2">
       <v-col cols="2">
+        <span class="text-caption text-medium-emphasis">{{ formattedDate }}</span>
+      </v-col>
+      <v-col cols="2">
+        <span class="font-weight-bold text-body-2">{{ formattedAmount }}</span>
+      </v-col>
+      <v-col cols="2">
         <span class="text-body-2 font-weight-bold">{{ bill.name }}</span>
       </v-col>
       <v-col cols="2">
         <span class="text-caption text-medium-emphasis">{{ bill.type }}</span>
       </v-col>
-      <v-col cols="2" class="d-flex align-center">
-        <v-chip size="small" text-color="white">
-          ₦{{ formattedAmountPaid }} / ₦{{ formattedTotal }}
-        </v-chip>
-      </v-col>
-      <v-col cols="1">
-        <v-chip size="small" :color="statusColor" text-color="white">{{
-          bill.status
-        }}</v-chip>
-      </v-col>
       <v-col cols="2">
-        <span class="text-caption text-medium-emphasis">{{ bill.recurrence }}</span>
+        <v-chip size="x-small" :color="statusColor" label>{{ bill.status }}</v-chip>
       </v-col>
       <v-col cols="1">
         <span class="text-caption text-medium-emphasis">{{ formattedDueDate }}</span>
@@ -82,85 +51,54 @@
       <v-col cols="1" class="d-flex justify-end">
         <v-menu>
           <template #activator="{ props: menuProps }">
-            <v-btn
-              icon="mdi-dots-vertical"
-              size="x-small"
-              variant="text"
-              v-bind="menuProps"
-            />
+            <v-btn icon="mdi-dots-vertical" size="x-small" variant="text" v-bind="menuProps" />
           </template>
           <v-list density="compact" rounded="lg" min-width="140">
-            <v-list-item
-              prepend-icon="mdi-pencil-outline"
-              title="Edit"
-              @click="emit('edit', bill)"
-            />
-            <v-list-item
-              prepend-icon="mdi-content-copy"
-              title="Duplicate"
-              @click="emit('duplicate', bill)"
-            />
-            <v-list-item
-              prepend-icon="mdi-delete-outline"
-              title="Delete"
-              base-color="error"
-              @click="emit('delete', bill)"
-            />
+            <v-list-item prepend-icon="mdi-pencil-outline" title="Edit" @click="emit('edit', bill)" />
+            <v-list-item prepend-icon="mdi-content-copy" title="Duplicate" @click="emit('duplicate', bill)" />
+            <v-list-item prepend-icon="mdi-delete-outline" title="Delete" base-color="error" @click="emit('delete', bill)" />
           </v-list>
         </v-menu>
       </v-col>
     </v-row>
-
-    <!-- Payment progress bar -->
-    <v-progress-linear
-      :model-value="progressPercent"
-      :color="statusColor"
-      height="3"
-      rounded
-      class="mx-2 mb-1"
-    />
   </v-card>
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue";
-import type { BillType } from "@/stores/billtype.store";
+import type { Bill } from "@/stores/bill.store";
+import { formatCurrency } from "@/composables/useCurrency";
 
-const props = defineProps<{ bill: BillType }>();
+const props = defineProps<{ bill: Bill }>();
 const emit = defineEmits<{
-  edit: [bill: BillType];
-  delete: [bill: BillType];
-  duplicate: [bill: BillType];
+  edit: [bill: Bill];
+  delete: [bill: Bill];
+  duplicate: [bill: Bill];
 }>();
 
-const formattedAmountPaid = computed(() =>
-  Number(props.bill.amountPaid).toLocaleString("en-NG")
+const formattedDate = computed(() =>
+  new Date(props.bill.date).toLocaleDateString("en-GB", {
+    day: "2-digit", month: "2-digit", year: "numeric",
+  })
 );
-
-const formattedTotal = computed(() => Number(props.bill.total).toLocaleString("en-NG"));
 
 const formattedDueDate = computed(() =>
   props.bill.dueDate
-    ? new Date(props.bill.dueDate).toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      })
+    ? new Date(props.bill.dueDate).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })
     : "—"
 );
 
-const progressPercent = computed(() =>
-  props.bill.total > 0
-    ? Math.min((props.bill.amountPaid / props.bill.total) * 100, 100)
-    : 0
-);
+// Uses the bill's own saved currency, not the user's current preference —
+// keeps historical records displaying correctly even after a preference
+// change.
+const formattedAmount = computed(() => formatCurrency(props.bill.amount, props.bill.currency));
 
 const statusColor = computed(() => {
   const colors: Record<string, string> = {
-    Paid: "green",
-    Part: "orange",
-    Unpaid: "red",
-    Overdue: "red",
+    Paid: "success",
+    Part: "warning",
+    Unpaid: "grey",
+    Overdue: "error",
   };
   return colors[props.bill.status] ?? "secondary";
 });

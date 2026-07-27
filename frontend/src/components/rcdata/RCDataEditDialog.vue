@@ -56,7 +56,7 @@
           <v-text-field
             v-model="form.amountValue"
             variant="outlined"
-            label="Amount (₦)"
+            :label="`Amount (${symbol})`"
             type="number"
             density="comfortable"
             color="secondary"
@@ -155,7 +155,9 @@ import { ref, reactive, watch } from "vue";
 import { useRCDataStore } from "@/stores/rcdata.store";
 import type { RCData } from "@/stores/rcdata.store";
 import DialogHeaderComponent from "@/components/shared/DialogHeaderComponent.vue";
+import { useCurrency } from "@/composables/useCurrency.ts";
 
+const { symbol } = useCurrency();
 const open = defineModel<boolean>({ required: true });
 const props = defineProps<{ record: RCData | null }>();
 const emit = defineEmits<{ updated: [] }>();

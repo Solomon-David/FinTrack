@@ -22,7 +22,7 @@
           <v-text-field
             v-model="entry.amount"
             variant="outlined"
-            label="Amount (₦)"
+            :label="`Amount (${symbol})`"
             type="number"
             step="1000"
             density="comfortable"
@@ -117,7 +117,9 @@ import { useUserStore } from "@/stores/users.stores";
 import { useIncomeStore as IncomeStore } from "@/stores/income.store";
 import DialogHeaderComponent from "@/components/shared/DialogHeaderComponent.vue";
 import type { IncomeEntry } from "@/types";
+import { useCurrency } from "@/composables/useCurrency.ts";
 
+const { symbol } = useCurrency();
 const snackbar = reactive({ show: false, message: "", color: "success" });
 
 function showSnackbar(message: string, color: string) {

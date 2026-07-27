@@ -5,7 +5,7 @@
       <template #prepend>
         <div class="d-flex flex-column justify-center mr-3">
           <span class="text-caption text-medium-emphasis">{{ formattedDate }}</span>
-          <span class="font-weight-bold text-body-2">₦{{ formattedAmount }}</span>
+          <span class="font-weight-bold text-body-2">{{ formattedAmount }}</span>
         </div>
       </template>
 
@@ -53,7 +53,7 @@
         <span class="text-caption text-medium-emphasis">{{ formattedDate }}</span>
       </v-col>
       <v-col cols="3">
-        <span class="font-weight-bold text-body-2">₦{{ formattedAmount }}</span>
+        <span class="font-weight-bold text-body-2">{{ formattedAmount }}</span>
       </v-col>
       <v-col cols="3">
         <span class="text-body-2 font-weight-bold">{{ income.sender }}</span>
@@ -98,6 +98,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import type { Income } from "@/stores/income.store";
+import { formatCurrency } from "@/composables/useCurrency";
 
 const props = defineProps<{ income: Income }>();
 const emit = defineEmits<{
@@ -115,6 +116,6 @@ const formattedDate = computed(() =>
 );
 
 const formattedAmount = computed(() =>
-  Number(props.income.amount).toLocaleString("en-NG")
+  formatCurrency(props.income.amount, props.income.currency)
 );
 </script>
