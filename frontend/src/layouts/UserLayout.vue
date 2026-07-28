@@ -74,7 +74,7 @@ onMounted(() => {
   // logs in on a new/different device).
   const savedTheme = userStore.user?.preferredTheme;
   if (savedTheme === "mainTheme" || savedTheme === "darkTheme") {
-    theme.global.name.value = savedTheme;
+    theme.change(savedTheme);
     localStorage.setItem("fintrack-theme", savedTheme);
   }
 
