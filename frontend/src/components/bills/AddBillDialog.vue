@@ -31,7 +31,7 @@
               <v-text-field
                 v-model="entry.amount"
                 variant="outlined"
-                :label="Amount Paid (${symbol})"
+                :label="`Amount Paid (${symbol})`"
                 type="number"
                 density="comfortable"
               >
@@ -55,7 +55,7 @@
               <v-text-field
                 v-model="entry.total"
                 variant="outlined"
-                :label="Total Owed (${symbol})"
+                :label="`Total Owed (${symbol})`"
                 type="number"
                 density="comfortable"
               >
