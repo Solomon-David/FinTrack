@@ -168,7 +168,14 @@ const emit = defineEmits<{ updated: [] }>();
 const billTypeStore = useBillTypeStore();
 const formRef = ref();
 
-const types = ["Electricity", "Accommodation", "Subscription", "Insurance", "Utility" "Other"];
+const types = [
+  "Electricity",
+  "Accommodation",
+  "Subscription",
+  "Insurance",
+  "Utility",
+  "Other",
+];
 const recurrences = ["One-time", "Daily", "Weekly", "Monthly", "Yearly"];
 const weekDays = [
   { label: "Sunday", value: 0 },
