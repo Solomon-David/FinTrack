@@ -39,7 +39,7 @@
       </v-form>
 
       <div v-if="newTotal !== null" class="text-caption text-medium-emphasis">
-        New total: {{ symbol }}{{ symbolnewTotal.toLocaleString("en-NG") }}
+        New total: {{ symbol }}{{ newTotal.toLocaleString("en-NG") }}
       </div>
 
       <v-row dense>
