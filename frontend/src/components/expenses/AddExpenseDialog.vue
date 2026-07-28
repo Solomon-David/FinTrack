@@ -81,9 +81,7 @@
               <template #item="{ props: itemProps, item }">
                 <v-list-item
                   v-bind="itemProps"
-                  :subtitle="`${symbol}${item.raw.amountPaid)}/${symbol}${
-                    item.raw.total
-                  } • ${item.raw.status}`"
+                  :subtitle="`${symbol}${item.raw.amountPaid}/${symbol}${item.raw.total} • ${item.raw.status}`"
                 />
               </template>
             </v-select>
