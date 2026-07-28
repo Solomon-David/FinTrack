@@ -198,7 +198,7 @@ import { useUserStore } from "@/stores/users.stores";
 import { useBillStore } from "@/stores/bill.store";
 import DialogHeaderComponent from "@/components/shared/DialogHeaderComponent.vue";
 import type { BillEntry } from "@/types";
-import { symbol } from "@/composables/useCurrency.ts";
+import useCurrency from "@/composables/useCurrency.ts";
 
 const { symbol } = useCurrency();
 const props = defineProps<{ initialEntry?: Partial<BillEntry> }>();

@@ -6,9 +6,9 @@
       <div class="mb-2" v-if="plan">
         <div class="font-weight-bold text-body-1">{{ plan.name }}</div>
         <div class="text-caption text-medium-emphasis">
-          Currently saved: {{symbol}}{{ Number(plan.progress).toLocaleString("en-NG") }}
+          Currently saved: {{ symbol }}{{ Number(plan.progress).toLocaleString("en-NG") }}
           <span v-if="plan.targetAmount !== 'Unknown'">
-            / {{symbol}}{{ Number(plan.targetAmount).toLocaleString("en-NG") }}
+            / {{ symbol }}{{ Number(plan.targetAmount).toLocaleString("en-NG") }}
           </span>
         </div>
       </div>
@@ -39,7 +39,7 @@
       </v-form>
 
       <div v-if="newTotal !== null" class="text-caption text-medium-emphasis">
-        New total: {{ symbol.join(newTotal.toLocaleString("en-NG")) }}
+        New total: {{ symbol }}{{ symbolnewTotal.toLocaleString("en-NG") }}
       </div>
 
       <v-row dense>

@@ -1,5 +1,4 @@
 import axiosInstance from '@/utils/axios';
-import type { User } from '../types';
 
 export async function signUp(payload: { email: string; password: string; firstName: string; lastName: string; }) {
   return axiosInstance.post('/auth/signup', payload);

@@ -201,6 +201,7 @@ const form = reactive({
     | "Accommodation"
     | "Subscription"
     | "Insurance"
+    | "Utility"
     | "Other",
   total: null as number | null,
   currency: "NGN",
