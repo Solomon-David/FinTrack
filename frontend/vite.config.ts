@@ -60,24 +60,40 @@ export default defineConfig({
         scope: "/",
         icons: [
           {
-            src: "icons/pwa-192x192.png",
+            src: "assets/logo_light_small.png",
             sizes: "192x192",
             type: "image/png",
             purpose: "any",
           },
           {
-            src: "icons/pwa-512x512.png",
+            src: "assets/logo_light_large.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "any",
           },
           {
-            src: "icons/pwa-maskable-512x512.png",
+            src: "assets/logo_maskable.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable",
           },
         ],
+        screenshots: [
+          {
+            src: "/screenshots/mobile.jpeg",
+            sizes: "390x844",
+            type: "image/jpeg",
+            label: "FinTrack Dashboard",
+            // no form_factor = mobile
+          },
+          {
+            src: "/screenshots/desktop.jpeg",
+            sizes: "1280x800",
+            type: "image/jpeg",
+            form_factor: "wide",
+            label: "FinTrack Dashboard (Desktop)",
+          },
+        ]
       },
     })
   ],
