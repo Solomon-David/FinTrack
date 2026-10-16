@@ -2,25 +2,28 @@ import nodemailer from 'nodemailer';
 import { SendEmailDTO } from '../interfaces';
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false, // STARTTLS — not SSL
   auth: {
-    user: process.env.GMAIL_USER,       // your gmail address
-    pass: process.env.GMAIL_APP_PASSWORD, // the 16-char app password
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASSWORD,
   },
 });
 
-export const sendEmail = async (dto: SendEmailDTO): Promise<void> => {
+export const sendEmail = async (emailDetails: SendEmailDTO): Promise<void> => {
   try {
+    const fromName = process.env.EMAIL_FROM_NAME || 'FinTrack';
     await transporter.sendMail({
-      from: `"FinTrack" <${process.env.GMAIL_USER}>`,
-      to: dto.to,
-      subject: dto.subject,
-      html: dto.html,
-      text: dto.text,
+      from: `"${fromName}" <${process.env.GMAIL_USER}>`,
+      to: emailDetails.to,
+      subject: emailDetails.subject,
+      html: emailDetails.html,
+      text: emailDetails.text,
     });
-    console.log(`Email sent to ${dto.to}`);
+    console.log(`Email sent to ${emailDetails.to}`);
   } catch (error) {
     console.error('Error sending email:', error);
-    throw error;
+    // Swallow — failed email should not break the calling flow
   }
 };
